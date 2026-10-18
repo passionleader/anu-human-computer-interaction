@@ -15,3 +15,7 @@ jobs:
       - run: npm ci --include=dev
       - run: npm test
       - run: npm run build
+      - name: Check production HTTP and WebSocket
+        run: npm run qa:production
+        env:
+          QA_SKIP_BROWSER: '1'
