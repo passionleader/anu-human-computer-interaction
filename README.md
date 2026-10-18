@@ -2,7 +2,9 @@
 
 **Render 호스팅 준비 완료:** [배포 안내](DEPLOY_RENDER.md)의 공개 Git 저장소 방식 또는 `render.yaml` Blueprint를 사용한다. Build: `npm ci --include=dev && npm run build`, Start: `npm start`. HTTPS 주소에서 계산대와 스마트폰을 영문 4글자로 연결한다. 무료 서버의 저장 공간은 임시이므로 연구 기록을 내보내 보관한다.
 
-`Prototype_plan.md`를 구현한 로컬 모의 계산대다. 참가자 UI·고정 안내 음성은 영어다. 노트북 `/checkout`, 스마트폰 `/scanner`, 연구자 `/study`가 같은 Node 서버와 실제 WebSocket으로 연결된다. 실제 결제·NFC·회원번호·이메일 전송은 없다.
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/passionleader/anu-human-computer-interaction)
+
+`Prototype_plan.md`를 구현한 로컬·Render용 모의 계산대다. 참가자 UI·고정 안내 음성은 영어다. 노트북 `/checkout`, 스마트폰 `/scanner`, 연구자 `/study`가 같은 Node 서버와 실제 WebSocket으로 연결된다. 실제 결제·NFC·회원번호·이메일 전송은 없다.
 
 ## 빠른 실행: PC에서 기능 확인
 

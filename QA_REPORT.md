@@ -1,16 +1,18 @@
 # QA 보고서
 
-최종 갱신: **2026-10-19 04:41 AEDT**. PC에서 수행 가능한 구현·검증·오류 수정·재검증을 완료했다. 실제 스마트폰·인쇄물·물리 스피커 검증은 아래 별도 체크리스트에 남겼다. 실제 참가자 평가는 수행하지 않았다.
+최종 갱신: **2026-10-19 04:46 AEDT**. PC에서 수행 가능한 구현·검증·오류 수정·재검증을 완료했다. 실제 스마트폰·인쇄물·물리 스피커 검증은 아래 별도 체크리스트에 남겼다. 실제 참가자 평가는 수행하지 않았다.
 
 ## 추가 수정: 검은 카메라 화면과 Render 배포
 
 - 카메라 권한 대기 중 서버 상태가 갱신되면 영상 요소가 교체되어, ZXing이 화면에서 제거된 요소에 스트림을 연결하는 문제를 실제로 재현했다. 수정 전에는 보이는 영상의 stream 없음·해상도 0×0·검은 프레임이었다. 수정 후 동일한 영상 요소와 640×480 실제 가상 카메라 프레임을 확인했다. 시작 중 표시, 프레임 수신 확인, muted/playsinline, 재시도·오래된 요청 정리도 적용했다.
-- 재현 전: `qa-output/camera-startup-1792344266513/results.json` FAIL. 최종 재검증: `qa-output/camera-startup-1792345245055/results.json` PASS. 카메라 바코드 인식·정지 중복 방지·다시 제시: `qa-output/camera-1792345252623/results.json` 3 PASS.
+- 재현 전: `qa-output/camera-startup-1792344266513/results.json` FAIL. 최종 재검증: `qa-output/camera-startup-1792345552905/results.json` PASS. 카메라 바코드 인식·정지 중복 방지·다시 제시: `qa-output/camera-1792345252623/results.json` 3 PASS.
 - Render의 PORT·HTTPS 프록시·공개 주소·헬스 체크를 지원하며 프런트와 Node 서버를 빌드한다. 무료 Blueprint와 선택적 유료 영구 디스크 Blueprint를 구분했다. 무료 호스팅의 연구 기록 소실 가능성을 연구자 화면과 배포 안내에 표시했다.
 - Render와 같은 `npm ci --include=dev` 새 설치 및 `npm run build` 성공. 취약한 Vite와 ws를 각각 7.3.7 / 8.22.0으로 갱신했고 npm 감사 결과 0 vulnerabilities.
-- 빌드된 `server-dist/server.mjs`로 `/healthz`, 공개 HTTPS 스캐너 링크, 연구자 인증, WebSocket, 카드 PDF·영상·상품 사진 제공 4항목 PASS: `qa-output/production-1792345263552/results.json`. 실제 Render 서비스 배포 자체를 검증한 것은 아니다.
-- 회귀 검증: core 14, 전체 브라우저 16, 페어링 5, 페어링 권한 3, 미디어 보호 4, 복구 4, HTTPS 1, 연구자 화면 6 모두 PASS. 전체 브라우저 근거: `qa-output/run-1792344900289/results.json`. 독립 검토자를 중복 실행하지 않았다.
+- 빌드된 `server-dist/server.mjs`로 `/healthz`, 공개 HTTPS 스캐너 링크, 연구자 인증, WebSocket, 카드 PDF·영상·상품 사진 제공 4항목 PASS: `qa-output/production-1792345560377/results.json`. 실제 Render 서비스 배포 자체를 검증한 것은 아니다.
+- 회귀 검증: core 14, 전체 브라우저 16, 페어링 5, 페어링 권한 3, 미디어 보호 4, 복구 4, HTTPS 1, 연구자 화면 6 모두 PASS. 전체 브라우저 근거: `qa-output/run-1792345564806/results.json`. 독립 검토자를 중복 실행하지 않았다.
 - 스마트폰에서 Render HTTPS 주소로 후면 카메라 미리보기와 실물 인쇄 바코드를 다시 확인해야 한다. 아래 실물 체크리스트는 미검증 상태를 유지한다.
+
+- Windows 설치 상태에서 생성한 npm 잠금 파일에 Linux용 Rollup 패키지가 빠져 첫 원격 빌드가 실패했다. 빈 폴더에서 플랫폼 전체 잠금 파일을 생성해 수정했다. GitHub Ubuntu / Node 22에서 npm ci·core 14개·프로덕션 빌드·빌드 서버 HTTP/WebSocket/상품 자료 검증까지 통과: [Linux CI 실행 결과](https://github.com/passionleader/anu-human-computer-interaction/actions/runs/39150985401). CI의 스마트폰 브라우저 단계는 명시적으로 제외하며 PC 브라우저에서 별도 검증했다.
 
 ## 독립 검토와 통합 책임
 
