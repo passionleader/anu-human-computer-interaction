@@ -1,0 +1,24 @@
+# Optional PAID configuration. Select this only when you want persistent research records.
+services:
+  - type: web
+    name: anu-hci-research
+    runtime: node
+    plan: starter
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    disk:
+      name: research-records
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: STUDY_TOKEN
+        generateValue: true
+      - key: DATA_DIR
+        value: /var/data
+      - key: DATA_PERSISTENT
+        value: "true"

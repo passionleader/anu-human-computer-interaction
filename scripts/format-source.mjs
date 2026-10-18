@@ -1,0 +1,2 @@
+import ts from 'typescript';import {readFile,writeFile} from 'node:fs/promises';
+for(const file of ['core.ts','server.ts','src/main.ts','tests/core.test.ts','tests/browser.mjs','tests/camera.mjs','tests/recovery.mjs','tests/https.mjs']){const source=ts.createSourceFile(file,await readFile(file,'utf8'),ts.ScriptTarget.Latest,true,file.endsWith('.ts')?ts.ScriptKind.TS:ts.ScriptKind.JS);await writeFile(file,ts.createPrinter({newLine:ts.NewLineKind.LineFeed}).printFile(source));}

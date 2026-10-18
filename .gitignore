@@ -1,0 +1,16 @@
+node_modules/
+dist/
+server-dist/
+data/
+.cert/
+qa-output/
+*.log
+.pnpm-store/
+.python-deps/
+.tools/
+.env
+.env.*
+!.env.example
+asset-sources/
+WORK_LOG.md
+DEPLOY_WORK_LOG.md

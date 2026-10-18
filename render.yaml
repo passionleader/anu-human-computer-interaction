@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: anu-human-computer-interaction
+    runtime: node
+    plan: free
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /healthz
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      - key: STUDY_TOKEN
+        generateValue: true
+      - key: DATA_DIR
+        value: ./data
+      - key: DATA_PERSISTENT
+        value: "false"
