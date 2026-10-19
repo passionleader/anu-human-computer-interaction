@@ -1,6 +1,7 @@
 import './style.css';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { BarcodeFormat, DecodeHintType } from '@zxing/library';
+import {EANCameraReader} from './barcode-reader';
 import catalogue from '../products.json';
 type Product = typeof catalogue[number];
 const app = document.querySelector<HTMLDivElement>('#app')!, role = location.pathname.startsWith('/scanner') ? 'scanner' : location.pathname.startsWith('/study') ? 'study' : 'checkout';
@@ -10,6 +11,8 @@ let state: any = null, ws: WebSocket | null = null, online = false, code = new U
 let audioEnabled = false, audioContext: AudioContext | null = null, activeAudio: HTMLAudioElement | null = null, activeVideo: HTMLVideoElement | null = null, mediaTimer: ReturnType<typeof setTimeout> | undefined, feedbackId: string | null = null, lastPhase = '', notice = '', reconnectTimer: ReturnType<typeof setTimeout> | undefined, cameraStarted = false, guideAudio: HTMLAudioElement | null = null, stopCamera: (() => void) | null = null;
 let readySent = false, participantNotice='', soundPreparing=false,cameraStarting=false,cameraRequest=0;
 let cameraStream:MediaStream|null=null;
+let cameraDeviceId='',cameraDevices:MediaDeviceInfo[]=[],cameraTorch=false,cameraZoom:number|null=null;
+let cameraCaps:{torch?:boolean;zoom?:{min:number;max:number;step?:number};focusMode?:string[]}={};
 const pending = new Map<string, any>(), processed = new Set<string>();
 const soundFiles = ['beep', 'cow', 'sheep', 'pig', 'thanks','welcome','unknown','membership','payment','complete'];
 const sounds = Object.fromEntries(soundFiles.map(n => { const a = new Audio(`/assets/media/${n}.wav`); a.preload = 'auto'; return [n, a]; }));
@@ -217,7 +220,15 @@ function scan(barcode: string, inputMethod: string) { if (!online || state?.phas
     renderScanner();
     return;
 } const m = { type: 'scan', barcode, scanId: crypto.randomUUID(), inputMethod }; pending.set(m.scanId, m); send(m); scanLock = true; setTimeout(() => scanLock = false, 500); }
-function releaseCamera(){stopCamera?.();stopCamera=null;cameraStream?.getTracks().forEach(track=>track.stop());cameraStream=null;cameraStarted=false;}
+function releaseCamera(){stopCamera?.();stopCamera=null;cameraStream?.getTracks().forEach(track=>track.stop());cameraStream=null;cameraStarted=false;cameraTorch=false;cameraZoom=null;cameraCaps={};}
+async function adjustCamera(value:Record<string,unknown>){
+    const track=cameraStream?.getVideoTracks()[0];if(!track)return;
+    try{await track.applyConstraints({advanced:[value as MediaTrackConstraintSet]});
+        const settings=track.getSettings() as MediaTrackSettings&{zoom?:number;torch?:boolean};
+        cameraTorch=settings.torch??(typeof value.torch==='boolean'?value.torch:cameraTorch);cameraZoom=settings.zoom??(typeof value.zoom==='number'?value.zoom:cameraZoom);
+    }catch{notice='This camera could not apply that setting. Try another camera or move farther from the barcode.';}
+    renderScanner();
+}
 async function startCamera(){
     if(cameraStarting)return;
     const request=++cameraRequest;cameraStarting=true;renderScanner();
@@ -227,13 +238,24 @@ async function startCamera(){
         if(!await enableSound())return;
         if(request!==cameraRequest||document.hidden)return;
         releaseCamera();
-        acquired=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280}},audio:false});
+        const videoConstraints:MediaTrackConstraints={width:{ideal:1920},height:{ideal:1080},frameRate:{ideal:30,max:30}};
+        if(cameraDeviceId)videoConstraints.deviceId={exact:cameraDeviceId};else videoConstraints.facingMode={ideal:'environment'};
+        acquired=await navigator.mediaDevices.getUserMedia({video:videoConstraints,audio:false});
         if(request!==cameraRequest||document.hidden){acquired.getTracks().forEach(track=>track.stop());return;}
         cameraStream=acquired;
+        const track=acquired.getVideoTracks()[0];
+        cameraDeviceId=track.getSettings().deviceId||cameraDeviceId;
+        try{cameraDevices=(await navigator.mediaDevices.enumerateDevices()).filter(d=>d.kind==='videoinput');}catch{cameraDevices=[];}
+        if(request!==cameraRequest||document.hidden){acquired.getTracks().forEach(track=>track.stop());return;}
+        try{cameraCaps=track.getCapabilities?.() as typeof cameraCaps||{};}catch{cameraCaps={};}
+        if(cameraCaps.focusMode?.includes('continuous')){
+            try{await track.applyConstraints({advanced:[{focusMode:'continuous'} as MediaTrackConstraintSet]});}catch{/* Optional; unsupported focus must not prevent scanning. */}
+        }
+        if(request!==cameraRequest||document.hidden){acquired.getTracks().forEach(track=>track.stop());return;}
+        cameraZoom=(track.getSettings() as MediaTrackSettings&{zoom?:number}).zoom??null;
         const video=document.querySelector<HTMLVideoElement>('#camera')!;
         video.muted=true;video.defaultMuted=true;video.autoplay=true;video.playsInline=true;video.setAttribute('playsinline','');video.setAttribute('webkit-playsinline','');
-        const hints=new Map();hints.set(DecodeHintType.POSSIBLE_FORMATS,[BarcodeFormat.EAN_13]);
-        const reader=new BrowserMultiFormatReader(hints,{delayBetweenScanAttempts:140,delayBetweenScanSuccess:140});
+        const reader=new EANCameraReader();
         const controls=await reader.decodeFromStream(acquired,video,result=>observeBarcode(result?.getText()||null));
         if(request!==cameraRequest||document.hidden){controls.stop();acquired.getTracks().forEach(track=>track.stop());return;}
         stopCamera=()=>controls.stop();await video.play();
@@ -251,8 +273,8 @@ else if (role === 'scanner')
 function renderScanner() { if (!state) {
     pair();
     return;
-} const toolsOpen=document.querySelector<HTMLDetailsElement>('details')?.open||false,manualDraft=document.querySelector<HTMLInputElement>('#barcode')?.value||'';const oldVideo = document.querySelector<HTMLVideoElement>('#camera'), stream = oldVideo?.srcObject; const p = catalogue.find(p => p.id === state.lastProduct); shell(`<main class="scanner"><p class="eyebrow">HANDHELD SCANNER</p><h1>${state.phase === 'feedback' ? 'Please wait…' : state.phase === 'scanning' ? 'Ready to scan.' : state.phase === 'ready' ? 'Ready when you are.' : 'Follow the checkout screen.'}</h1><p>Hold the barcode steady inside the frame.</p><div class="camera-box"><video id="camera" autoplay muted playsinline></video><div class="camera-frame"></div>${!cameraStarted?(cameraStarting?'<div class="camera-starting" role="status">Starting camera…<br>Allow camera access when asked.</div>':'<button class="primary" id="enable-camera">Enable camera & sound</button>'):''}</div><div class="last-item"><span>LAST ADDED</span><b>${p ? esc(p.name) : 'No items yet'}</b></div>${state.phase === 'feedback' ? '<button data-skip>Skip feedback</button>' : ''}<p class="alert" role="status">${esc(notice || (!online ? 'Connection lost. Reconnecting…' : ''))}</p><details><summary>Researcher tools</summary><p>Manual entry is recorded separately from camera scans.</p><form id="manual"><label>EAN-13<input inputmode="numeric" id="barcode" pattern="[0-9]{13}" required maxlength="13"></label><button ${state.phase !== 'scanning' || !online ? 'disabled' : ''}>Add barcode manually</button></form><label>Developer: decode a barcode image<input id="barcode-image" type="file" accept="image/*"></label><button id="sound-test">Enable & test scanner sound</button><button id="retry-camera">Retry camera</button></details><p class="muted">Keep this tab open and the screen awake.<br>Camera images stay on this device.</p></main>`); if (oldVideo)
-    document.querySelector('#camera')!.replaceWith(oldVideo);document.querySelector<HTMLDetailsElement>('details')!.open=toolsOpen;document.querySelector<HTMLInputElement>('#barcode')!.value=manualDraft; document.querySelector('#enable-camera')?.addEventListener('click', () => void startCamera()); document.querySelector('#retry-camera')?.addEventListener('click', () => {releaseCamera();void startCamera();}); document.querySelector('#sound-test')?.addEventListener('click', async () => { if(await enableSound())await testSound('cow'); }); document.querySelector('[data-skip]')?.addEventListener('click', () => send({ type: 'skip' })); document.querySelector('#barcode-image')?.addEventListener('change', async (e) => { const file = (e.target as HTMLInputElement).files?.[0]; if (!file)
+} const toolsOpen=document.querySelector<HTMLDetailsElement>('details')?.open||false,manualDraft=document.querySelector<HTMLInputElement>('#barcode')?.value||'';const oldVideo = document.querySelector<HTMLVideoElement>('#camera'); const p = catalogue.find(p => p.id === state.lastProduct); shell(`<main class="scanner"><p class="eyebrow">HANDHELD SCANNER</p><h1>${state.phase === 'feedback' ? 'Please wait…' : state.phase === 'scanning' ? 'Ready to scan.' : state.phase === 'ready' ? 'Ready when you are.' : 'Follow the checkout screen.'}</h1><p>${state.phase === 'ready' ? 'Waiting for the laptop checkout to start shopping.' : state.phase === 'feedback' ? 'Wait for the checkout feedback to finish before the next scan.' : 'Centre the barcode, including its white margins. Move farther away if the bars look blurry.'}</p>${state.phase === 'ready' ? '<div class="scanner-waiting" role="status"><b>Scanning has not started</b><p>Enable sound on both devices, then select <strong>Start shopping</strong> on the laptop checkout.</p></div>' : ''}<div class="camera-box"><video id="camera" autoplay muted playsinline></video><div class="camera-frame"></div>${!cameraStarted?(cameraStarting?'<div class="camera-starting" role="status">Starting camera…<br>Allow camera access when asked.</div>':'<button class="primary" id="enable-camera">Enable camera & sound</button>'):''}</div>${cameraStarted?`<div class="camera-controls">${cameraDevices.length>1?`<label>Camera<select id="camera-select">${cameraDevices.map((device,index)=>`<option value="${esc(device.deviceId)}" ${device.deviceId===cameraDeviceId?'selected':''}>${esc(device.label||`Camera ${index+1}`)}</option>`).join('')}</select></label>`:''}${cameraCaps.zoom&&cameraZoom!==null?`<label>Zoom<input id="camera-zoom" type="range" min="${cameraCaps.zoom.min}" max="${Math.min(cameraCaps.zoom.max,Math.max(cameraCaps.zoom.min,3))}" step="${cameraCaps.zoom.step||0.1}" value="${cameraZoom}"></label>`:''}${cameraCaps.torch?`<button id="camera-light" aria-pressed="${cameraTorch}">Light ${cameraTorch?'on':'off'}</button>`:''}<p>If the barcode stays blurry, try another rear camera. Keep the whole barcode in view.</p></div>`:''}<div class="last-item"><span>LAST ADDED</span><b>${p ? esc(p.name) : 'No items yet'}</b></div>${state.phase === 'feedback' ? '<button data-skip>Skip feedback</button>' : ''}<p class="alert" role="status">${esc(notice || (!online ? 'Connection lost. Reconnecting…' : ''))}</p><details><summary>Researcher tools</summary><p>Manual entry is recorded separately from camera scans.</p><form id="manual"><label>EAN-13<input inputmode="numeric" id="barcode" pattern="[0-9]{13}" required maxlength="13"></label><button ${state.phase !== 'scanning' || !online ? 'disabled' : ''}>Add barcode manually</button></form><label>Developer: decode a barcode image<input id="barcode-image" type="file" accept="image/*"></label><button id="sound-test">Enable & test scanner sound</button><button id="retry-camera">Retry camera</button></details><p class="muted">Keep this tab open and the screen awake.<br>Camera images stay on this device.</p></main>`); if (oldVideo)
+    document.querySelector('#camera')!.replaceWith(oldVideo);document.querySelector<HTMLDetailsElement>('details')!.open=toolsOpen;document.querySelector<HTMLInputElement>('#barcode')!.value=manualDraft; document.querySelector('#camera-select')?.addEventListener('change',e=>{cameraDeviceId=(e.target as HTMLSelectElement).value;releaseCamera();void startCamera();});document.querySelector('#camera-zoom')?.addEventListener('change',e=>void adjustCamera({zoom:Number((e.target as HTMLInputElement).value)}));document.querySelector('#camera-light')?.addEventListener('click',()=>void adjustCamera({torch:!cameraTorch})); document.querySelector('#enable-camera')?.addEventListener('click', () => void startCamera()); document.querySelector('#retry-camera')?.addEventListener('click', () => {releaseCamera();void startCamera();}); document.querySelector('#sound-test')?.addEventListener('click', async () => { if(await enableSound())await testSound('cow'); }); document.querySelector('[data-skip]')?.addEventListener('click', () => send({ type: 'skip' })); document.querySelector('#barcode-image')?.addEventListener('change', async (e) => { const file = (e.target as HTMLInputElement).files?.[0]; if (!file)
     return; const url = URL.createObjectURL(file); try {
     const hints = new Map();
     hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.EAN_13]);

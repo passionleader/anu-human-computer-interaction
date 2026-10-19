@@ -59,6 +59,10 @@ On Windows, after installing dependencies and building, you can also start the a
 
 Use one checkout window and one scanner window per trial. Duplicate roles display an error. End the trial before creating the next participant's trial. The condition is fixed at trial creation.
 
+**A visible camera preview does not mean shopping has started.** While the scanner says **Ready when you are.**, enable sound on both devices and select **Start shopping** on the laptop. Scan items once the phone says **Ready to scan.** The scanner displays a waiting notice until the checkout starts.
+
+The camera reader searches beyond the centre of the frame and handles horizontal and vertical EAN-13 codes. Keep the whole barcode and its white margins visible. If the bars look blurry, move farther away or use the **Camera** selector to try another rear lens. Automatic continuous focus, **Zoom**, and **Light** are used or shown only when the browser reports support. Actual iPhone performance still requires a device check.
+
 The checkout prepares its beep and instruction audio, while a condition B scanner prepares animal and thank-you audio. Missing or blocked required audio prevents readiness and displays **Sound unavailable**. Restore the files or sound settings and explicitly retry. A reconnected device must prepare sound before new scans are accepted; resending an already accepted scan does not add another item.
 
 ## Use a smartphone with local HTTPS

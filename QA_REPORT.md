@@ -16,6 +16,15 @@
 
 ## 독립 검토와 통합 책임
 
+### 2026-10-19 12:53 AEDT — iPhone scanner follow-up
+
+- User reported an iPhone 11 showing clear bars but no products added. Their screenshot showed **Ready when you are.**, which is the pre-shopping `ready` phase. Camera decoding cannot add items until the laptop starts shopping. The scanner now explicitly displays **Scanning has not started** and tells the user to enable sound and select **Start shopping** on the laptop. A camera test verifies the notice before start and its removal afterwards.
+- Camera decoding now uses EAN-13 `TRY_HARDER` searches beyond centre rows and explicit canvas rotation with corrected width/height for non-square frames. It requests 1920×1080 where available and offers camera selection. Continuous autofocus, zoom, and light controls depend on reported browser capabilities; unsupported optional settings do not prevent camera startup.
+- Real ZXing browser benchmark: all 7 products × 6 positions/orientations = **42/42 PASS**, blank frame rejected. The previous configuration missed **21/42**. PC maximum decode time was 101 ms. Evidence: `qa-output/scanner-quality-1792374627863/measurements.json` and `results.json`. This is a controlled PC benchmark, not iPhone performance evidence.
+- Regression: real getUserMedia → decoder → server, stationary deduplication, removal/re-presentation **3 PASS** (`qa-output/camera-1792374735652`); permission-delay rerender **PASS** (`qa-output/camera-startup-1792374745232`); whole browser flow **16 PASS** (`qa-output/run-1792374751983`); four-letter pairing **5 PASS** (`qa-output/pairing-1792374782012`).
+- Simulated camera capability checks using a real fake-camera stream: autofocus request, light toggle, zoom and switching to another camera **PASS** (`qa-output/camera-1792374785860`). Normal fake-camera execution also passes without those capabilities.
+- The scaled camera region of the supplied screenshot was not decoded in a separate local check. The screenshot is not a raw camera frame, and this does not establish how the live iPhone decoder performs. The user image is excluded from the repository. **After deployment, verify on the iPhone 11 after Start shopping, including real printed cards, alternate camera choice and physical focus.**
+
 04:05 이후 5시간 사용 한도 초기화(usedPercent=0)를 확인하고, **gpt-6-luna / high 서브에이전트 정확히 1명**을 `fork_turns=none`으로 실행했다. 검토자는 앱 소스를 수정하지 않고 격리 재현과 코드 리뷰를 수행했다. 메인이 수정·통합과 최종 재검증을 맡았다. 독립 상세 근거는 [QA_INDEPENDENT.md](QA_INDEPENDENT.md)에 있다.
 
 독립 검토에서 재현한 3건은 모두 수정했고, 검토자도 각각 수정 후 동작을 다시 확인했다. 알려진 미해결 PC 핵심 흐름 오류는 없다.
