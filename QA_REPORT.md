@@ -14,9 +14,7 @@
 
 - Windows 설치 상태에서 생성한 npm 잠금 파일에 Linux용 Rollup 패키지가 빠져 첫 원격 빌드가 실패했다. 빈 폴더에서 플랫폼 전체 잠금 파일을 생성해 수정했다. GitHub Ubuntu / Node 22에서 npm ci·core 14개·프로덕션 빌드·빌드 서버 HTTP/WebSocket/상품 자료 검증까지 통과: [Linux CI 실행 결과](https://github.com/passionleader/anu-human-computer-interaction/actions/runs/39150985401). CI의 스마트폰 브라우저 단계는 명시적으로 제외하며 PC 브라우저에서 별도 검증했다.
 
-## 독립 검토와 통합 책임
-
-### 2026-10-19 12:53 AEDT — iPhone scanner follow-up
+## 2026-10-19 12:53 AEDT — iPhone scanner follow-up
 
 - User reported an iPhone 11 showing clear bars but no products added. Their screenshot showed **Ready when you are.**, which is the pre-shopping `ready` phase. Camera decoding cannot add items until the laptop starts shopping. The scanner now explicitly displays **Scanning has not started** and tells the user to enable sound and select **Start shopping** on the laptop. A camera test verifies the notice before start and its removal afterwards.
 - Camera decoding now uses EAN-13 `TRY_HARDER` searches beyond centre rows and explicit canvas rotation with corrected width/height for non-square frames. It requests 1920×1080 where available and offers camera selection. Continuous autofocus, zoom, and light controls depend on reported browser capabilities; unsupported optional settings do not prevent camera startup.
@@ -24,6 +22,8 @@
 - Regression: real getUserMedia → decoder → server, stationary deduplication, removal/re-presentation **3 PASS** (`qa-output/camera-1792374735652`); permission-delay rerender **PASS** (`qa-output/camera-startup-1792374745232`); whole browser flow **16 PASS** (`qa-output/run-1792374751983`); four-letter pairing **5 PASS** (`qa-output/pairing-1792374782012`).
 - Simulated camera capability checks using a real fake-camera stream: autofocus request, light toggle, zoom and switching to another camera **PASS** (`qa-output/camera-1792374785860`). Normal fake-camera execution also passes without those capabilities.
 - The scaled camera region of the supplied screenshot was not decoded in a separate local check. The screenshot is not a raw camera frame, and this does not establish how the live iPhone decoder performs. The user image is excluded from the repository. **After deployment, verify on the iPhone 11 after Start shopping, including real printed cards, alternate camera choice and physical focus.**
+
+## 독립 검토와 통합 책임
 
 04:05 이후 5시간 사용 한도 초기화(usedPercent=0)를 확인하고, **gpt-6-luna / high 서브에이전트 정확히 1명**을 `fork_turns=none`으로 실행했다. 검토자는 앱 소스를 수정하지 않고 격리 재현과 코드 리뷰를 수행했다. 메인이 수정·통합과 최종 재검증을 맡았다. 독립 상세 근거는 [QA_INDEPENDENT.md](QA_INDEPENDENT.md)에 있다.
 
@@ -97,3 +97,11 @@ HTTPS 검사는 **시험 자체서명 인증서 + ignoreHTTPSErrors**를 사용�
 - [ ] 핫스팟 잠시 끊기·재연결 시 수량·영수증·로그 일치, 참여 중단/스킵 가능.
 
 이 항목은 PC 에뮬레이션으로 완료 표시하지 않는다. 실제 참가자 평가·실제 행동 데이터 수집은 수행하지 않았다.
+
+## 2026-10-19 — Checkout beep follow-up
+
+- User reports prerecorded PC instructions and animal video work, but neither the checkout beep test nor scan beep is audible. The WAV itself contains a valid 1 kHz / 120 ms signal (peak 0.15997, RMS 0.10223); it is not silent. The exact physical speaker/browser cause was not established.
+- Replaced short-clip HTMLMediaElement playback with a decoded AudioBuffer on the already unlocked Web Audio context. Every beep uses a fresh BufferSource, gain 2, connected to the audio destination; nodes disconnect after completion. Both the test button and accepted scans use this path. The WAV remains 120 ms and extra feedback still starts after 180 ms.
+- A missing, invalid or silent beep prevents checkout sound readiness. Playback errors still disable readiness and show recovery instructions.
+- Actual browser audio-graph verification: missing WAV recovery, silent decoded WAV rejection, enable/test button nonzero output, one accepted-scan beep on checkout only, and no clipping all PASS. Evidence: `qa-output/beep-1792375199200/results.json` and `output-levels.json`. The first test implementation raced against the previous error notice; synchronization was corrected before the successful run.
+- Regression: media guards 4 PASS (`qa-output/media-guards-1792375041011`); full browser checkout 16 PASS (`qa-output/run-1792375046191`). This verifies the audio graph rather than physical speaker audibility. User must reload the deployed PC page, enable sound, and listen to Test checkout sound.

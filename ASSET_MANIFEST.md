@@ -12,7 +12,7 @@
 | `media/pig.mp4` | NaIzletuSi ™, [2024-06-01 LJUBLJANA ZOO LJUBLJANA - pig 4.webm](https://commons.wikimedia.org/wiki/File:2024-06-01_LJUBLJANA_ZOO_LJUBLJANA_-_pig_4.webm), 원 영상 [YouTube](https://www.youtube.com/watch?v=GrDpWL1odxw) | **CC BY 3.0**: https://creativecommons.org/licenses/by/3.0/ . 원본 2024-06-01. 1–4초 자르기, 960×540 H.264 변환, 오디오 제거. 출처·권리자 명시는 이 파일을 함께 제공함으로써 유지. 원본은 `asset-sources/pig-original.webm`. |
 | `media/pig.wav`의 실제 울음 층 | Secretlondon, [Mudchute pig 1.ogg](https://commons.wikimedia.org/wiki/File:Mudchute_pig_1.ogg), 2007-04, Mudchute City Farm | **CC BY-SA 2.5** 선택: https://creativecommons.org/licenses/by-sa/2.5/ . mono WAV 변환, 3회 배치, 음량 조정, 절차적 squeal 합성. **결합 파생 음원 pig.wav 전체는 CC BY-SA 2.5로 제공.** 돼지의 종 구분용으로 실제 짧은 oink와 합성 끽끽거림을 조합했으며 실제 고통 소리 녹음은 아님. |
 | `media/thanks.wav` | 이 작업에서 제작한 소 캐릭터 합성 | Windows SAPI Microsoft David의 “Thank you!”를 피치 0.78배·속도 보정·저역 통과 처리하고 사용자 제공 소 음원으로 앞뒤 질감을 붙인 약 2.95초 표현. 단순 무가공 사람 TTS와 구별되는 합성 시도이지만, **소가 말하는 듯한 느낌과 명료도는 실물 청취 검증 대기**. |
-| `media/beep.wav` | numpy 수식 합성 | 1 kHz, 120 ms, fade-in/out, 최대 진폭 0.16. 직접 만든 무브랜드 성공음. 노트북에서만 사용. |
+| `media/beep.wav` | numpy 수식 합성 | 1 kHz, 120 ms, fade-in/out, 최대 진폭 0.16. 직접 만든 무브랜드 성공음. 노트북에서만 사용. 앱은 준비된 Web Audio AudioBuffer를 gain 2로 출력하며 원본 파일은 변경하지 않음. |
 | `welcome/unknown/membership/payment/complete.wav` | Windows SAPI, Microsoft David Desktop / English (United States) | 명세의 영어 문장을 고정 녹음, rate -1, mono 44.1kHz, 음량 정규화. 런타임 OS TTS 목소리 차이를 피함. 문구·재생 상태 매핑은 소스에 있음. |
 
 ## 이미지 생성 프롬프트

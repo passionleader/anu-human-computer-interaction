@@ -2,6 +2,7 @@ import './style.css';
 import { BrowserMultiFormatReader } from '@zxing/browser';
 import { BarcodeFormat, DecodeHintType } from '@zxing/library';
 import {EANCameraReader} from './barcode-reader';
+import {CheckoutBeep} from './checkout-beep';
 import catalogue from '../products.json';
 type Product = typeof catalogue[number];
 const app = document.querySelector<HTMLDivElement>('#app')!, role = location.pathname.startsWith('/scanner') ? 'scanner' : location.pathname.startsWith('/study') ? 'study' : 'checkout';
@@ -11,10 +12,11 @@ let state: any = null, ws: WebSocket | null = null, online = false, code = new U
 let audioEnabled = false, audioContext: AudioContext | null = null, activeAudio: HTMLAudioElement | null = null, activeVideo: HTMLVideoElement | null = null, mediaTimer: ReturnType<typeof setTimeout> | undefined, feedbackId: string | null = null, lastPhase = '', notice = '', reconnectTimer: ReturnType<typeof setTimeout> | undefined, cameraStarted = false, guideAudio: HTMLAudioElement | null = null, stopCamera: (() => void) | null = null;
 let readySent = false, participantNotice='', soundPreparing=false,cameraStarting=false,cameraRequest=0;
 let cameraStream:MediaStream|null=null;
+let checkoutBeep:CheckoutBeep|null=null;
 let cameraDeviceId='',cameraDevices:MediaDeviceInfo[]=[],cameraTorch=false,cameraZoom:number|null=null;
 let cameraCaps:{torch?:boolean;zoom?:{min:number;max:number;step?:number};focusMode?:string[]}={};
 const pending = new Map<string, any>(), processed = new Set<string>();
-const soundFiles = ['beep', 'cow', 'sheep', 'pig', 'thanks','welcome','unknown','membership','payment','complete'];
+const soundFiles = ['cow', 'sheep', 'pig', 'thanks','welcome','unknown','membership','payment','complete'];
 const sounds = Object.fromEntries(soundFiles.map(n => { const a = new Audio(`/assets/media/${n}.wav`); a.preload = 'auto'; return [n, a]; }));
 const send = (m: any) => { if (ws?.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ ...m, requestId: crypto.randomUUID() }));
@@ -83,8 +85,10 @@ async function enableSound():Promise<boolean> {
     soundPreparing=true;audioEnabled=false;readySent=false;
     try {
         audioContext??=new AudioContext();await audioContext.resume();
+        if(role==='checkout')checkoutBeep=new CheckoutBeep(audioContext);
         const required=role==='checkout'?['beep','welcome','unknown','membership','payment','complete']:state?.condition==='B'?['cow','sheep','pig','thanks']:[];
         const results=await Promise.allSettled(required.map(async name=>{
+            if(name==='beep'){await checkoutBeep!.prepare();return;}
             const a=sounds[name];let timeout:ReturnType<typeof setTimeout>|undefined;a.muted=true;a.load();
             try {await Promise.race([a.play(),new Promise<never>((_,reject)=>{timeout=setTimeout(()=>reject(Error(name+' audio timed out')),4000);})]);}
             finally {clearTimeout(timeout);a.pause();a.currentTime=0;a.muted=false;}
@@ -94,7 +98,7 @@ async function enableSound():Promise<boolean> {
     }catch(e){soundFailure('Sound preparation failed: '+e);return false;}
     finally {soundPreparing=false;render();}
 }
-async function testSound(name:string){try{sounds[name].currentTime=0;await sounds[name].play();}catch(e){soundFailure('Sound test failed: '+e);}}
+async function testSound(name:string){try{if(name==='beep'){guideAudio?.pause();if(!checkoutBeep)throw Error('Enable checkout sound first');await checkoutBeep.play();}else{sounds[name].currentTime=0;await sounds[name].play();}}catch(e){soundFailure('Sound test failed: '+e);}}
 function playGuide(name: string) { guideAudio?.pause(); speechSynthesis.cancel(); if (!audioEnabled)
     return; guideAudio = new Audio(`/assets/media/${name}.wav`); guideAudio.play().catch(e => { send({ type: 'device_error', detail: 'Guidance failed: ' + e }); notice = 'Audio unavailable. Ask the researcher for help.'; }); }
 function speakPhase(phase: string) { guideAudio?.pause(); const names: Record<string, string> = { scanning: 'welcome', membership: 'membership', payment: 'payment', receipt: 'complete' }; if (phase === 'scanning' && Object.keys(state.cart).length)
@@ -110,9 +114,8 @@ async function onAccepted(event: any) {
         try {
             if (!audioEnabled)
                 throw Error('Checkout sound not enabled');
-            const beep = sounds.beep;
-            beep.currentTime = 0;
-            await beep.play();
+            if(!checkoutBeep)throw Error('Checkout beep is not prepared');
+            await checkoutBeep.play();
         }
         catch (e) {
             send({ type: 'media', feedbackId: event.feedbackId, status: 'failed', detail: String(e) });

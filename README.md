@@ -65,6 +65,8 @@ The camera reader searches beyond the centre of the frame and handles horizontal
 
 The checkout prepares its beep and instruction audio, while a condition B scanner prepares animal and thank-you audio. Missing or blocked required audio prevents readiness and displays **Sound unavailable**. Restore the files or sound settings and explicitly retry. A reconnected device must prepare sound before new scans are accepted; resending an already accepted scan does not add another item.
 
+The checkout beep uses the unlocked Web Audio output rather than starting a short HTML audio clip. It retains its 120 ms duration and plays at twice the source amplitude. Use **Test checkout sound** to confirm it on the PC speakers after enabling sound; browser signal checks do not replace listening on the actual device.
+
 ## Use a smartphone with local HTTPS
 
 For a locally hosted scanner, use HTTPS trusted by the phone. `localhost` refers to the device opening the page, so it does not point a phone to the laptop. Plain HTTP at a laptop IP address and bypassed certificate warnings are not a completed camera setup. Physical smartphone verification remains pending.

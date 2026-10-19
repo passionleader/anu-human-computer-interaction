@@ -18,7 +18,8 @@
     "qa:pairing-auth": "node tests/pairing-auth.mjs",
     "qa:camera-startup": "node tests/camera-startup.mjs",
     "qa:production": "node tests/production.mjs",
-    "qa:scanner-quality": "node tests/scanner-quality.mjs"
+    "qa:scanner-quality": "node tests/scanner-quality.mjs",
+    "qa:beep": "node tests/beep.mjs"
   },
   "dependencies": {
     "@zxing/browser": "0.1.5",
