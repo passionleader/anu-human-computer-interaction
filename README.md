@@ -22,6 +22,8 @@ Open `/checkout` on the laptop and `/scanner` on the phone using the same Render
 
 **Free hosting uses temporary storage. Research records can disappear after a restart or redeployment.** Export CSV/JSON records from `/study` and keep a separate copy. The optional `render.research.yaml` uses a **paid** service and persistent disk; review the cost before choosing it. Keep a single server instance because records are stored in a JSON file.
 
+**Updates:** Services created using a Public Git Repository URL require **Manual Deploy → Deploy latest commit** after a GitHub push. Services connected through a Git provider follow their Auto-Deploy setting. Wait for the new deployment to become Live before reloading both devices and enabling sound again. [Render deployment documentation](https://render.com/docs/deploys).
+
 ## Pair the scanner with four letters
 
 1. Open `/checkout` and select **Generate pairing code**.
@@ -83,7 +85,7 @@ For a locally hosted scanner, use HTTPS trusted by the phone. `localhost` refers
 4. Transfer and install only `.cert/phone-rootCA.crt` on the phone. **Do not transfer the CA private key `rootCA-key.pem` or the server private key `localhost-key.pem`.**
 5. On iPhone/iPad, install the certificate profile, then enable full trust for the development CA under Settings → General → About → Certificate Trust Settings. On Android, install it as a CA certificate through the security/credentials settings; menus vary by device. Follow [mkcert's mobile instructions](https://github.com/FiloSottile/mkcert#mobile-devices).
 6. Open the researcher console at `https://localhost:5173/study` and set the pairing address to `https://YOUR_LAPTOP_IP:5173`. Open the scanner QR code on the phone and confirm there is **no certificate warning**. HTTPS connections automatically use WSS.
-7. Enable camera and sound, then check all seven printed cards and the physical speakers. Beeps/instructions should come from the laptop and animal sounds from the phone. The scanner requests the rear camera where available and does not request microphone access.
+7. Enable camera and sound, then check all eight printed cards and the physical speakers. Beeps/instructions should come from the laptop and animal sounds from the phone. The scanner requests the rear camera where available and does not request microphone access.
 
 If the laptop's IP changes, regenerate the certificate with the new address. Certificates and private keys are excluded by `.gitignore`. Check the address, port, server binding (`0.0.0.0`), and inbound firewall rule. Allow Node.js or TCP 5173 on **private networks** in Windows Firewall; keep the firewall enabled. Hotspot client isolation can prevent devices from reaching each other.
 
@@ -93,11 +95,11 @@ See [MDN's getUserMedia documentation](https://developer.mozilla.org/en-US/docs/
 
 | Resource | Location |
 | --- | --- |
-| Seven products, EAN-13 codes, integer-cent prices, and feedback mapping | `products.json` |
+| Eight products, EAN-13 codes, integer-cent prices, and feedback mapping | `products.json` |
 | AI-generated images of fictional, unbranded products | `public/assets/products/*.png` |
 | EAN-13 barcode originals | `public/assets/barcodes/*.svg` and PNG files |
 | Individual card images | `public/assets/cards/*.png` |
-| Seven-page A6 print document | [product-cards.pdf](public/assets/cards/product-cards.pdf) |
+| Eight-page A6 print document | [product-cards.pdf](public/assets/cards/product-cards.pdf) |
 | Audio and video | `public/assets/media/` |
 | Creation methods, sources, and licenses | [ASSET_MANIFEST.md](ASSET_MANIFEST.md) |
 
@@ -105,7 +107,7 @@ Print cards at **actual size / 100%**, with fit-to-page scaling disabled. Each p
 
 The three animal videos are silent, three-second clips. Animal audio is no longer than three seconds, and the beep lasts 120 ms. Video and audio play separately. Prerecorded instructions use Windows Microsoft David. The cow's thank-you voice combines pitch-shifted English speech with a synthesized cow character sound; the pig sound combines a short recorded call with procedural squeals. Species recognition, voice clarity, the intended distressed sound, and comfortable volume require physical listening checks. These assets are not presented as recordings of an animal actually suffering.
 
-Tofu and whey protein produce no extra phone audio. Pea protein and plant-based mince play the thank-you sound. Condition A omits the additional animal/thank-you feedback and waiting period while retaining the beep and payment instructions. Skipping feedback stops playback on both devices and is recorded.
+Cola (375 mL, $3.00) is an unrelated neutral control and produces no animal or thank-you feedback. Whey protein is milk-derived and is not vegan; its existing neutral feedback setting does not classify it as vegan. Tofu and whey protein currently produce no extra phone audio. Pea protein and plant-based mince play the thank-you sound. Condition A omits the additional animal/thank-you feedback and waiting period while retaining the beep and payment instructions. Skipping feedback stops playback on both devices and is recorded.
 
 ## Checkout layout
 
@@ -142,4 +144,4 @@ node --import tsx server.ts
 
 Normal `Start.ps1` execution serves the production build. Run `npm run build` again after changing source files.
 
-Regenerating assets requires Pillow, NumPy, ReportLab, PyMuPDF, and imageio-ffmpeg. Run `scripts/voices.ps1` to create source TTS audio, then `python scripts/assets.py` to build cards and media. Asset regeneration also requires the original source files in the local `asset-sources/` folder, which is excluded from the public repository. Finished images, cards, and media are already included, so regeneration is not needed to run or deploy the app.
+Regenerating assets requires Pillow, NumPy, ReportLab, PyMuPDF, and imageio-ffmpeg. Run `scripts/voices.ps1` to create source TTS audio, then `python scripts/assets.py` to build cards and media. Use `python scripts/cards.py` to rebuild barcode labels, card PNGs and the PDF from existing product photos without regenerating media. Asset regeneration also requires the original source files in the local `asset-sources/` folder, which is excluded from the public repository. Finished images, cards, and media are already included, so regeneration is not needed to run or deploy the app.

@@ -15,6 +15,10 @@
 | `media/beep.wav` | numpy 수식 합성 | 1 kHz, 120 ms, fade-in/out, 최대 진폭 0.16. 직접 만든 무브랜드 성공음. 노트북에서만 사용. 앱은 준비된 Web Audio AudioBuffer를 gain 2로 출력하며 원본 파일은 변경하지 않음. |
 | `welcome/unknown/membership/payment/complete.wav` | Windows SAPI, Microsoft David Desktop / English (United States) | 명세의 영어 문장을 고정 녹음, rate -1, mono 44.1kHz, 음량 정규화. 런타임 OS TTS 목소리 차이를 피함. 문구·재생 상태 매핑은 소스에 있음. |
 
+## Cola addition (2026-10-19)
+
+Built-in imagegen generated `public/assets/products/cola.png`. Final prompt: "Use case: product-mockup. A single unbranded 375 mL cola can, dark burgundy/red matte aluminium with a blank cream band and silver pull-tab top. Warm off-white seamless background, soft studio lighting, subtle shadow, centred complete can with generous margins. Photorealistic supermarket product photography. No text, letters, logos, barcode, watermark or people." The generated file was copied into the project. Cola is a neutral unrelated control ($3.00, EAN 2000000000084). `scripts/cards.py` generates eight A6 pages and all card images without changing the media.
+
 ## 이미지 생성 프롬프트
 
 내장 image_gen 모드로 **각 상품마다 별도 호출**했다. 공통 프롬프트:
@@ -29,6 +33,7 @@
 | vegan-mince.png | plant based mince in a clear sealed supermarket tray, green sleeve with blank label, small pea sprig alongside |
 | tofu.png | white firm tofu block in a sealed transparent supermarket pack with a plain ivory blank label |
 | pea-protein.png | matte sage green stand-up protein powder pouch, blank cream label, small bowl of pale powder and a few green peas beside it |
+| cola.png | unbranded burgundy cola can with blank cream band and silver pull-tab top |
 | whey-protein.png | matte blue stand-up protein powder pouch, blank cream label, small bowl of pale powder beside it |
 
 ## 앱 의존 자료

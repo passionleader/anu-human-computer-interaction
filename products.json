@@ -1,9 +1,99 @@
 [
- {"id":"lamb","barcode":"2000000000015","name":"Lamb Pieces","packSize":"500 g","priceCents":1000,"imagePath":"/assets/products/lamb.png","feedbackType":"animal","animal":"sheep","audioPath":"/assets/media/sheep.wav","videoPath":"/assets/media/sheep.mp4"},
- {"id":"beef","barcode":"2000000000022","name":"Beef Mince","packSize":"500 g","priceCents":1000,"imagePath":"/assets/products/beef.png","feedbackType":"animal","animal":"cow","audioPath":"/assets/media/cow.wav","videoPath":"/assets/media/cow.mp4"},
- {"id":"pork","barcode":"2000000000039","name":"Pork Mince","packSize":"500 g","priceCents":1000,"imagePath":"/assets/products/pork.png","feedbackType":"animal","animal":"pig","audioPath":"/assets/media/pig.wav","videoPath":"/assets/media/pig.mp4"},
- {"id":"vegan-mince","barcode":"2000000000046","name":"Plant-Based Mince","packSize":"500 g","priceCents":1000,"imagePath":"/assets/products/vegan-mince.png","feedbackType":"vegan_thanks","animal":"cow","audioPath":"/assets/media/thanks.wav","videoPath":null},
- {"id":"tofu","barcode":"2000000000053","name":"Firm Tofu","packSize":"500 g","priceCents":500,"imagePath":"/assets/products/tofu.png","feedbackType":"neutral","animal":null,"audioPath":null,"videoPath":null},
- {"id":"pea-protein","barcode":"2000000000060","name":"Pea Protein","packSize":"500 g","priceCents":1500,"imagePath":"/assets/products/pea-protein.png","feedbackType":"vegan_thanks","animal":"cow","audioPath":"/assets/media/thanks.wav","videoPath":null},
- {"id":"whey-protein","barcode":"2000000000077","name":"Whey Protein","packSize":"500 g","priceCents":1500,"imagePath":"/assets/products/whey-protein.png","feedbackType":"neutral","animal":null,"audioPath":null,"videoPath":null}
+  {
+    "id": "lamb",
+    "barcode": "2000000000015",
+    "name": "Lamb Pieces",
+    "packSize": "500 g",
+    "priceCents": 1000,
+    "imagePath": "/assets/products/lamb.png",
+    "feedbackType": "animal",
+    "animal": "sheep",
+    "audioPath": "/assets/media/sheep.wav",
+    "videoPath": "/assets/media/sheep.mp4"
+  },
+  {
+    "id": "beef",
+    "barcode": "2000000000022",
+    "name": "Beef Mince",
+    "packSize": "500 g",
+    "priceCents": 1000,
+    "imagePath": "/assets/products/beef.png",
+    "feedbackType": "animal",
+    "animal": "cow",
+    "audioPath": "/assets/media/cow.wav",
+    "videoPath": "/assets/media/cow.mp4"
+  },
+  {
+    "id": "pork",
+    "barcode": "2000000000039",
+    "name": "Pork Mince",
+    "packSize": "500 g",
+    "priceCents": 1000,
+    "imagePath": "/assets/products/pork.png",
+    "feedbackType": "animal",
+    "animal": "pig",
+    "audioPath": "/assets/media/pig.wav",
+    "videoPath": "/assets/media/pig.mp4"
+  },
+  {
+    "id": "vegan-mince",
+    "barcode": "2000000000046",
+    "name": "Plant-Based Mince",
+    "packSize": "500 g",
+    "priceCents": 1000,
+    "imagePath": "/assets/products/vegan-mince.png",
+    "feedbackType": "vegan_thanks",
+    "animal": "cow",
+    "audioPath": "/assets/media/thanks.wav",
+    "videoPath": null
+  },
+  {
+    "id": "tofu",
+    "barcode": "2000000000053",
+    "name": "Firm Tofu",
+    "packSize": "500 g",
+    "priceCents": 500,
+    "imagePath": "/assets/products/tofu.png",
+    "feedbackType": "neutral",
+    "animal": null,
+    "audioPath": null,
+    "videoPath": null
+  },
+  {
+    "id": "pea-protein",
+    "barcode": "2000000000060",
+    "name": "Pea Protein",
+    "packSize": "500 g",
+    "priceCents": 1500,
+    "imagePath": "/assets/products/pea-protein.png",
+    "feedbackType": "vegan_thanks",
+    "animal": "cow",
+    "audioPath": "/assets/media/thanks.wav",
+    "videoPath": null
+  },
+  {
+    "id": "whey-protein",
+    "barcode": "2000000000077",
+    "name": "Whey Protein",
+    "packSize": "500 g",
+    "priceCents": 1500,
+    "imagePath": "/assets/products/whey-protein.png",
+    "feedbackType": "neutral",
+    "animal": null,
+    "audioPath": null,
+    "videoPath": null,
+    "ingredientCategory": "milk_derived"
+  },
+  {
+    "id": "cola",
+    "barcode": "2000000000084",
+    "name": "Cola",
+    "packSize": "375 mL",
+    "priceCents": 300,
+    "imagePath": "/assets/products/cola.png",
+    "feedbackType": "neutral",
+    "animal": null,
+    "audioPath": null,
+    "videoPath": null
+  }
 ]

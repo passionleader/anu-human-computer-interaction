@@ -5,13 +5,14 @@ const devices = { checkout: true, scanner: true, ready: true };
 test('four-letter pairing codes are uppercase and avoid existing codes',()=>{const codes=new Set<string>();for(let i=0;i<500;i++){const code=generatePairingCode(codes);assert.match(code,/^[A-Z]{4}$/);assert.ok(!codes.has(code));codes.add(code);}});
 function trial(condition: 'A' | 'B' = 'A') { const t = createTrial('TEST', condition, true); assert.equal(command(t, 'checkout', { type: 'start' }, devices).ok, true); return t; }
 function scan(t: ReturnType<typeof trial>, id: string, scanId = id) { return command(t, 'scanner', { type: 'scan', barcode: products.find(p => p.id === id)!.barcode, scanId, inputMethod: 'camera' }, devices); }
-test('all seven EAN checksums and integer cent prices', () => { for (const p of products) {
+test('all product EAN checksums and integer cent prices', () => { for (const p of products) {
     const sum = [...p.barcode.slice(0, 12)].reduce((s, c, i) => s + Number(c) * (i % 2 ? 3 : 1), 0);
     assert.equal((10 - sum % 10) % 10, Number(p.barcode.at(-1)));
     assert.ok(Number.isInteger(p.priceCents));
 } });
 test('all products, quantities and remove one', () => { const t = trial(); for (const p of products)
-    scan(t, p.id); assert.equal(total(t), 7500); scan(t, 'beef', 'beef-2'); assert.equal(t.cart.beef, 2); command(t, 'checkout', { type: 'remove', productId: 'beef' }, devices); assert.equal(t.cart.beef, 1); assert.equal(total(t), 7500); });
+    scan(t, p.id); assert.equal(total(t), 7800); scan(t, 'beef', 'beef-2'); assert.equal(t.cart.beef, 2); command(t, 'checkout', { type: 'remove', productId: 'beef' }, devices); assert.equal(t.cart.beef, 1); assert.equal(total(t), 7800); });
+test('cola is an unrelated neutral control in condition B',()=>{const t=trial('B');const p=products.find(p=>p.id==='cola')!;assert.equal(p.priceCents,300);assert.equal(p.feedbackType,'neutral');assert.equal(p.audioPath,null);assert.equal(p.videoPath,null);assert.equal(scan(t,'cola').ok,true);assert.equal(t.phase,'scanning');assert.equal(t.cart.cola,1);assert.equal(total(t),300);});
 test('same ID retransmission is idempotent, new ID adds', () => { const t = trial(); scan(t, 'tofu', 'unique'); scan(t, 'tofu', 'unique'); assert.equal(t.cart.tofu, 1); assert.equal(t.events.filter(e => e.eventType === 'scan_accepted').length, 1); scan(t, 'tofu', 'unique-2'); assert.equal(t.cart.tofu, 2); });
 test('unknown barcode and disconnected device cannot add', () => { const t = trial(); assert.equal(command(t, 'scanner', { type: 'scan', scanId: 'unknown', barcode: '0000000000000' }, devices).ok, false); assert.equal(command(t, 'scanner', { type: 'scan', scanId: 'offline', barcode: products[0].barcode }, { checkout: false, scanner: true }).ok, false); assert.equal(total(t), 0); });
 test('sound readiness gates trial start', () => { const t = createTrial('TEST', 'A', true); assert.equal(command(t, 'checkout', { type: 'start' }, { ...devices, ready: false }).ok, false); assert.equal(t.phase, 'ready'); });

@@ -1,6 +1,6 @@
 # QA 보고서
 
-최종 갱신: **2026-10-19 04:46 AEDT**. PC에서 수행 가능한 구현·검증·오류 수정·재검증을 완료했다. 실제 스마트폰·인쇄물·물리 스피커 검증은 아래 별도 체크리스트에 남겼다. 실제 참가자 평가는 수행하지 않았다.
+최종 갱신: **2026-10-19**. PC에서 수행 가능한 구현·검증·오류 수정·재검증을 완료했다. 실제 스마트폰·인쇄물·물리 스피커 검증은 아래 별도 체크리스트에 남겼다. 실제 참가자 평가는 수행하지 않았다.
 
 ## 추가 수정: 검은 카메라 화면과 Render 배포
 
@@ -113,3 +113,12 @@ HTTPS 검사는 **시험 자체서명 인증서 + ignoreHTTPSErrors**를 사용�
 - The first layout run exposed the duplicated itemized receipt overflowing the left panel. Removed that duplicate from the completion stage; all items remain in the right basket and full downloadable receipt. Retested successfully.
 - Automated layout checks cover seven PC sizes from 581×700 to 1920×1080, all seven product rows, independent scrolling, no page scrolling/overflow, visible total/payment controls, preserved scroll position, membership/payment/receipt, and animal video plus Skip on a short 1280×600 viewport. Results and screenshots are in the latest `qa-output/checkout-layout-*` directory.
 - Regression: full browser suite 16 PASS (`qa-output/run-1792375644516`) and beep/output suite 4 PASS (`qa-output/beep-1792375675012`). Local type check and production builds passed. No real participant data or user screenshot was published.
+
+## 2026-10-19 — Cola, whey classification and deployed beep diagnosis
+
+- Added unrelated neutral control Cola, 375 mL / $3.00, EAN-13 2000000000084. It produces the ordinary checkout beep but no animal/thank-you feedback. Product data, generated photo, SVG/PNG barcode and print card are included.
+- Rebuilt eight A6 PDF pages and eight card PNGs, inspected the rendered contact sheet and Cola page, and verified all page names/EAN text and 105×148 mm dimensions. `scripts/cards.py` now rebuilds print assets independently from audio/video generation. Source media are not required for card-only updates.
+- Whey protein is milk-derived, not vegan. Added ingredientCategory=milk_derived. Existing neutral feedback is preserved pending the user's optional choice; neutral does not mean vegan. No participant-facing vegan claim was added.
+- Public service inferred from the configured Render name and verified at https://anu-human-computer-interaction.onrender.com: serves old index-DD-NNphd.js / index-DEE8NyCP.css. Its JS lacks the new beep player and its CSS lacks the split checkout layout. The deployed beep WAV returns 200 and has the exact same SHA-256 as the local file (3EB3D0DD88E86293695AF61AA527CD45EA30140A004F690D70266302E69D3D3B). This identifies an outdated deployment, not a changed/missing audio asset. No researcher token or trial data was used. The user was asked to confirm their service URL.
+- Latest code must be deployed via Render Manual Deploy → Deploy latest commit if the service uses a public Git repository URL; a browser refresh alone cannot update server code. Do not claim actual speaker audibility is verified remotely.
+- Checks: core15 PASS; 48 barcode position/orientation frames PASS (`qa-output/scanner-quality-1792376141690`); eight barcode PNGs and eight full card PNGs decoded in browser suite16 PASS (`qa-output/run-1792376146130`); split layout4 PASS with 8 rows (`qa-output/checkout-layout-1792376175442`); beep regression4 PASS. PDF has 8 pages, 23,757,327 bytes. Deployment evidence remains local at `qa-output/deployment-audit.json`.

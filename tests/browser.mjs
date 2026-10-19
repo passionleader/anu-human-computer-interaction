@@ -53,13 +53,13 @@ try {
         assert.ok(!(await r.text()).includes(token));
     } });
     await pair('A');
-    await check('seven EAN barcode images decoded in scanner; exact cart and total across separate contexts', async () => { for (const p of products) {
+    await check('all product EAN barcode images decoded in scanner; exact cart and total across separate contexts', async () => { for (const p of products) {
         if (!await scanner.locator('#barcode-image').isVisible())
             await scanner.locator('summary').click();
         await scanner.locator('#barcode-image').setInputFiles(`public/assets/barcodes/${p.id}.png`);
         await until(async () => (await current()).cart[p.id] === 1, 'decode ' + p.id);
-    } assert.equal((await current()).totalCents, 7500); await checkout.getByRole('button', { name: 'Pay $75.00' }).waitFor(); });
-    await check('all seven complete printed cards decode with the same decoder', async () => { for (const p of products) { if (!await scanner.locator('#barcode-image').isVisible()) await scanner.locator('summary').click(); await scanner.locator('#barcode-image').setInputFiles(`public/assets/cards/${p.id}.png`); await until(async () => (await current()).cart[p.id] === 2, 'full card decode '+p.id); } assert.equal((await current()).totalCents,15000); });
+    } assert.equal((await current()).totalCents, 7800); await checkout.getByRole('button', { name: 'Pay $78.00' }).waitFor(); });
+    await check('all complete printed cards decode with the same decoder', async () => { for (const p of products) { if (!await scanner.locator('#barcode-image').isVisible()) await scanner.locator('summary').click(); await scanner.locator('#barcode-image').setInputFiles(`public/assets/cards/${p.id}.png`); await until(async () => (await current()).cart[p.id] === 2, 'full card decode '+p.id); } assert.equal((await current()).totalCents,15600); });
     await check('same scan ID retransmission adds once and does not replay approval event', async () => { await scanner.evaluate(barcode => { const ws = window.__sockets[0]; const m = JSON.stringify({ type: 'scan', barcode, scanId: 'qa-duplicate', inputMethod: 'manual' }); ws.send(m); ws.send(m); }, products[4].barcode); await until(async () => (await current()).cart.tofu === 3, 'one duplicate addition'); await sleep(300); assert.equal((await current()).cart.tofu, 3); });
     await check('unknown barcode changes no basket', async () => { const before = (await current()).totalCents; await scanner.evaluate(() => window.__sockets[0].send(JSON.stringify({ type: 'scan', barcode: '0000000000000', scanId: 'qa-unknown' }))); await sleep(300); assert.equal((await current()).totalCents, before); });
     await checkout.screenshot({ path: path.join(runDir, 'checkout-basket.png'), fullPage: true });

@@ -12,6 +12,10 @@
 
 무료 서비스는 유휴 상태에서 대기할 수 있으므로 첫 접속에 시간이 걸린다. **무료 파일 시스템의 연구 데이터는 재배포·재시작 때 사라질 수 있다.** 시연용으로 사용하고 필요한 CSV/JSON은 `/study`에서 즉시 내려받는다. 실제 참가자 평가를 무료 서버에만 보관하지 않는다.
 
+## 수정본 재배포와 버전 확인
+
+Public Git Repository URL로 만든 서비스는 GitHub push 후 자동 배포되지 않는다. Render에서 **Manual Deploy → Deploy latest commit**을 선택한다. GitHub 계정을 연결해 만든 서비스는 Settings의 Auto-Deploy 설정에 따라 자동 배포된다. [Render 공식 배포 문서](https://render.com/docs/deploys)를 참고한다. 새 배포가 Live가 된 다음 PC와 스마트폰 페이지를 새로고침하고 소리를 다시 활성화한다. 브라우저 새로고침만으로 서버에 없는 최신 코드를 가져올 수는 없다.
+
 ## 연구 데이터 유지가 필요한 경우
 
 `render.research.yaml`은 **유료 Starter 서비스와 1GB 영구 디스크**를 사용하는 선택 사항이다. 비용을 확인한 뒤 해당 파일을 Blueprint로 지정한다. 디스크를 `/var/data`에 연결하고 `DATA_DIR=/var/data`, `DATA_PERSISTENT=true`를 사용한다. 직접 생성하는 경우에도 같은 설정을 적용한다. 데이터는 JSON 파일에 저장하므로 **인스턴스는 1개**를 유지하고 별도 내보내기 백업을 남긴다.
