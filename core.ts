@@ -97,7 +97,7 @@ export function command(t: Trial, role: Role, m: any, connected: {
         finishFeedback(t, 'skipped');
         return { ok: true };
     }
-    if (role === 'scanner')
+    if (role === 'scanner' && m.type !== 'tap')
         return reject('Not permitted');
     if (m.type === 'start' && t.phase === 'ready') {
         if (!connected.checkout || !connected.scanner || connected.ready === false)
@@ -146,7 +146,7 @@ export function command(t: Trial, role: Role, m: any, connected: {
     }
     if (m.type === 'tap' && t.phase === 'payment') {
         t.phase = 'processing';
-        log(t, 'payment_started');
+        log(t, 'payment_started', {device:role});
         return { ok: true, payment: true };
     }
     return reject('Action unavailable in this step');

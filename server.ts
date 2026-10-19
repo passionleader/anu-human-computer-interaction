@@ -74,7 +74,7 @@ app.get('/api/qr', async (q, r) => { try {
     const url = new URL(String(q.query.url));
     if (!['https:', 'http:'].includes(url.protocol))
         throw Error();
-    r.type('image/svg+xml').send(await QRCode.toString(url.href, { type: 'svg', margin: 3, width: 260 }));
+    r.type('image/svg+xml').send(await QRCode.toString(url.href, { type: 'svg', margin: 3, width: 340 }));
 }
 catch {
     r.status(400).send('Invalid URL');

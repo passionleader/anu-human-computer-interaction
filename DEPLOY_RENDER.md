@@ -7,7 +7,7 @@
 1. Render에서 **New → Web Service → Public Git Repository**를 선택하고 위 저장소 주소를 입력한다. 또는 **New → Blueprint**에서 저장소의 `render.yaml`을 사용한다.
 2. Web Service 직접 생성 시 Runtime **Node**, Branch **main**, Root Directory **빈칸**, Build Command `npm ci --include=dev && npm run build`, Start Command `npm start`, Instance Type **Free**, Health Check Path `/healthz`를 설정한다.
 3. 환경 변수 `NODE_VERSION=22`, `NODE_ENV=production`, `DATA_DIR=./data`, `DATA_PERSISTENT=false`, `STUDY_TOKEN=<연구자만 아는 긴 임의 문자열>`을 지정한다. Blueprint는 STUDY_TOKEN을 자동 생성한다. 실제 토큰은 GitHub에 올리지 않는다.
-4. 배포 완료 후 Render의 HTTPS 주소에서 `/checkout`과 `/scanner`를 연다. 계산대의 **Generate pairing code**로 영문 4글자를 만들고 스마트폰 스캐너에서 입력한다. 스마트폰에서 카메라 권한을 허용한다.
+4. 배포 완료 후 Render의 HTTPS 주소에서 `/checkout`과 `/scanner`를 연다. 계산대의 **Connect phone scanner**를 누른 뒤 큰 QR을 스마트폰 카메라로 찍으면 바로 연결된다. 필요하면 **Connect with code**에서 영문 4글자로 수동 연결한다. 스마트폰에서 카메라 권한을 허용한다.
 5. 실제 연구 설정은 `/study`에서 한다. 토큰은 Render 서비스의 **Environment → STUDY_TOKEN**에서 확인한다. 같은 서비스 주소를 양쪽 기기에서 사용한다. Render가 `RENDER_EXTERNAL_URL`을 제공하므로 로컬 IP 설정은 필요 없다. 별도 도메인을 쓸 때만 `PUBLIC_BASE_URL=https://도메인`을 지정한다.
 
 무료 서비스는 유휴 상태에서 대기할 수 있으므로 첫 접속에 시간이 걸린다. **무료 파일 시스템의 연구 데이터는 재배포·재시작 때 사라질 수 있다.** 시연용으로 사용하고 필요한 CSV/JSON은 `/study`에서 즉시 내려받는다. 실제 참가자 평가를 무료 서버에만 보관하지 않는다.

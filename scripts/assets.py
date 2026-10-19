@@ -15,7 +15,7 @@ def ff(*args):subprocess.run([FF,'-y','-loglevel','error',*map(str,args)],check=
 def wav(name,samples,rate=44100):
     with wave.open(str(assets/'media'/name),'wb') as f:
         f.setnchannels(1);f.setsampwidth(2);f.setframerate(rate);f.writeframes((np.clip(samples,-.8,.8)*32767).astype('<i2').tobytes())
-for animal,source in [('cow','Beef_gemini.mp4'),('sheep','Lamb_gemini.mp4'),('pig','prototype/asset-sources/pig-original.webm')]:
+for animal,source in [('cow','Beef_gemini.mp4'),('sheep','lamb_gemini.mp4'),('pig','pork_gemini.mp4')]:
     src=ROOT.parent/source
     ff('-ss',1,'-i',src,'-t',3,'-an','-vf','scale=960:-2','-c:v','libx264','-crf',23,'-pix_fmt','yuv420p','-movflags','+faststart',assets/'media'/f'{animal}.mp4')
     ff('-ss',1,'-i',src,'-t',2.8,'-vn','-ac',1,'-ar',44100,'-af','loudnorm=I=-21:TP=-4:LRA=6,afade=t=in:d=0.04,afade=t=out:st=2.55:d=0.25',assets/'media'/f'{animal}.wav')

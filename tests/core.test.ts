@@ -26,3 +26,13 @@ test('empty pay rejected; back retains basket; membership options logged', () =>
 test('double payment approved once, immutable after receipt', () => { const t = trial(); scan(t, 'tofu'); for (const m of [{ type: 'pay' }, { type: 'membership' }, { type: 'tap' }, { type: 'tap' }])
     command(t, 'checkout', m, devices); approve(t); const receipt = t.receiptId; approve(t); assert.equal(t.receiptId, receipt); assert.equal(t.events.filter(e => e.eventType === 'checkout_completed').length, 1); assert.equal(scan(t, 'beef').ok, false); assert.equal(command(t, 'checkout', { type: 'clear' }, devices).ok, false); assert.equal(total(t), 500); });
 test('scanner cannot mutate checkout state or end trial', () => { const t = trial(); scan(t, 'tofu'); assert.equal(command(t, 'scanner', { type: 'pay' }, devices).ok, false); assert.equal(command(t, 'scanner', { type: 'end' }, devices).ok, false); assert.equal(t.phase, 'scanning'); finishFeedback(t, 'failed'); });
+test('phone payment only in payment phase, requires both devices, and approves once across devices',()=>{
+    const t=trial();scan(t,'tofu');assert.equal(command(t,'scanner',{type:'tap'},devices).ok,false);
+    command(t,'checkout',{type:'pay'},devices);assert.equal(command(t,'scanner',{type:'membership'},devices).ok,false);
+    command(t,'checkout',{type:'membership'},devices);
+    assert.equal(command(t,'scanner',{type:'tap'},{...devices,checkout:false}).ok,false);
+    assert.equal(command(t,'scanner',{type:'tap'},devices).ok,true);
+    assert.equal(command(t,'checkout',{type:'tap'},devices).ok,false);
+    approve(t);approve(t);assert.equal(t.phase,'receipt');assert.equal(t.events.filter(e=>e.eventType==='checkout_completed').length,1);
+    assert.equal(t.events.find(e=>e.eventType==='payment_started').device,'scanner');
+});

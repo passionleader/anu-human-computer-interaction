@@ -24,15 +24,20 @@ Open `/checkout` on the laptop and `/scanner` on the phone using the same Render
 
 **Updates:** Services created using a Public Git Repository URL require **Manual Deploy → Deploy latest commit** after a GitHub push. Services connected through a Git provider follow their Auto-Deploy setting. Wait for the new deployment to become Live before reloading both devices and enabling sound again. [Render deployment documentation](https://render.com/docs/deploys).
 
-## Open the phone scanner by QR
+## Connect the phone scanner
 
-The PC checkout has a small **Scanner** QR button in its upper-right corner. Select it to enlarge the code, scan it with the phone camera, then enter the four-letter checkout code. The QR opens `https://anu-human-computer-interaction.onrender.com/scanner` and contains no trial code or researcher token. When a checkout code exists, the enlarged panel also displays its four letters. The dialog can be closed with its button or Escape and stays open during state updates. The committed PNG/SVG files are `public/assets/scanner-entry-qr.png` and `public/assets/scanner-entry-qr.svg`; regenerate them with `node scripts/scanner-qr.mjs`.
+1. Open `/checkout` and select **Connect phone scanner** (or **Connect phone** in the upper-right corner).
+2. Scan the large QR with the phone camera. It opens this checkout's `/scanner?code=…` link and pairs automatically, without typing.
+3. Alternatively, select **Connect with code** beside the QR, open `/scanner` on the phone and enter the four letters. Lowercase is accepted.
+4. Enable checkout sound and phone camera/sound, then select **Start shopping** on the checkout.
 
-## Pair the scanner with four letters
+QR images are generated locally for the current session and origin, without a researcher token. Share them only with the intended scanner. The committed `scanner-entry-qr.png`/`.svg` remain generic public scanner shortcuts; the live UI uses a session-specific QR.
 
-1. Open `/checkout` and select **Generate pairing code**.
-2. Enter the four letters, such as `ABCD`, at `/scanner` and select **Connect**. Lowercase input is accepted.
-3. On an already connected checkout, select **Pair scanner** to show the current code again. This preserves the trial, cart, and code. Older long codes are upgraded to four letters when shown.
+## Phone payment and receipt
+
+At payment, tap the simulated desktop terminal or select **Pay … · demo** on the connected phone. Both trigger the same single simulated approval: no real card details or charges. The scanner camera stops at payment. After approval, the checkout announces that the receipt has been sent to the smartphone. The phone displays quantities, prices, total and receipt ID, plus **Save receipt**. Reloading the same scanner session restores it while the server records and code remain available. A Render restart on temporary storage can erase these receipts. Delivery is through the connected scanner, not email or SMS.
+
+Guidance uses fixed English recordings of Microsoft Zira (female). Payment says “Tap your card, or pay directly on your smartphone.” Completion says “Thank you for shopping with us. Your receipt has been sent to your smartphone.”
 
 Codes expire after eight hours. End the current trial and create another to get a new code; ended trials do not accept new connections. Code generation avoids collisions, and repeated invalid pairing attempts are rate limited.
 

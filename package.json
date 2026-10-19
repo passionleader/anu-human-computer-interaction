@@ -21,7 +21,8 @@
     "qa:scanner-quality": "node tests/scanner-quality.mjs",
     "qa:beep": "node tests/beep.mjs",
     "qa:checkout-layout": "node tests/checkout-layout.mjs",
-    "qa:scanner-entry-qr": "node tests/scanner-entry-qr.mjs"
+    "qa:scanner-entry-qr": "node tests/scanner-entry-qr.mjs",
+    "qa:phone-checkout": "node tests/phone-checkout.mjs"
   },
   "dependencies": {
     "@zxing/browser": "0.1.5",

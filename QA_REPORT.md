@@ -136,3 +136,31 @@ HTTPS 검사는 **시험 자체서명 인증서 + ignoreHTTPSErrors**를 사용�
 - PC checkout upper-right Scanner button opens a larger native QR dialog. It is available before and after trial pairing, displays the current four-letter code when available, preserves its open state through rerenders, and supports Close/Escape. The phone scanner is unchanged. The button is hidden on phone-sized checkout windows below 560 px.
 - Actual QR decode and UI checks 3 PASS: `qa-output/scanner-entry-qr-1792379505512`. The QR decoded to https://anu-human-computer-interaction.onrender.com/scanner exactly. Screenshots visually inspected.
 - Pairing regression5 PASS (`qa-output/pairing-1792379510950`) and split-layout regression4 PASS across seven PC viewport sizes (`qa-output/checkout-layout-1792379517804`). Type check and production build passed. No extra packages, external QR service, or actual participant data used.
+
+
+## 2026-10-19 — Female guidance, direct QR pairing, phone payment/receipt, updated video
+
+- Five human checkout guidance files now use fixed Microsoft Zira female English recordings. Payment asks users to tap their card or pay directly on the smartphone. Completion announces that the receipt has been sent to the smartphone. Animal/character sounds and cow video are unchanged.
+- Checkout ready screen shows a prominent 220px session QR (160px in short PC windows), with a separate **Connect with code** button beside it. The header opens a 300px version. The QR points at the current origin's scanner URL with the checkout code; decoding/opening it joins directly, without manual input. It contains no researcher token. Initial **Connect phone scanner** action creates/reuses the permitted demonstration session; research pairing protections remain.
+- Payment can be completed at the desktop terminal or the connected phone's demo Pay button. Only the payment phase permits scanner tap commands; both devices must be connected. Duplicate/cross-device taps produce one approval. The scanner releases active camera tracks at payment and displays quantities, prices, total and receipt ID after approval. Reload restores the receipt from the server. Desktop download button is removed; optional Save receipt remains on the phone. This is WebSocket delivery, not email/SMS or a real payment service.
+- Latest user-provided lamb_gemini.mp4 and pork_gemini.mp4 replace sheep/pig video: seconds 1–4, 3s, H.264/yuv420p, 960×540, 30fps, muted, faststart. Original files unchanged. Outputs about 350KB/300KB. Frames and metadata inspected; no distorted aspect ratio. Reproduction script and asset provenance updated.
+
+### Validation
+
+- Core 17/17 PASS, type check and production build PASS.
+- Full browser regression 16 PASS: all eight barcode/card decodes, exact totals, desktop payment, sheep/pig/cow/whey playback, feedback recovery and exports (`run-1792381644160`).
+- Direct QR/phone checkout 5 groups PASS (`phone-checkout-1792381771681`): actual ZXing QR decode; no typing; code fallback dialog; phone double-tap and one approval; private receipt endpoint rejects wrong code; receipt reload; live fake-camera tracks stop at payment; back restores scanner controls; payment/receipt guidance playback; no browser errors. Ready QR and phone receipt screenshots visually inspected.
+- Split checkout layout 4 groups PASS across seven PC sizes (`checkout-layout-1792381613437`). Desktop membership/payment/receipt and animal feedback preserve left/right panels.
+- Beep 4 groups PASS (`beep-1792381676660`), code pairing 5 PASS (`pairing-1792381780730`), media failure/retry 4 PASS (`media-guards-1792381787161`), compiled production server 4 PASS (`production-1792381852359`), delayed camera permission/preview race PASS (`camera-startup-1792381856042`).
+- Video/audio metadata and extracted frames: local `qa-output/media-refresh`. All guidance files are nonempty mono 44.1kHz recordings. Latest videos are 3 seconds at 960×540/30fps. No actual participant data used.
+
+### Physical iPhone / deployed checks remaining
+
+- After deploying the latest commit and reloading both devices, scan the large checkout QR with the iPhone Camera app and confirm immediate pairing; also test the separate four-letter fallback. Use the Render HTTPS origin for camera access.
+- Confirm female voice audibility/naturalness and payment/receipt wording through the real PC speakers. Automated playback does not prove physical speaker output.
+- On iPhone 11, scan printed product cards, then test desktop terminal and phone Pay routes. Confirm camera indicator turns off at payment, quantities/total match the desktop, receipt scrolling/Save receipt works, and reloading restores it.
+- Check updated sheep/pig clips and existing animal audio timing on both real devices. These checks require physical hardware and were not claimed as completed.
+- Render deployment remains a user action. Receipts depend on the server records; free temporary storage can be reset by a restart/redeploy. No SMS/email delivery or persistent external receipt inbox is implemented.
+
+- Final connection-error handling recheck: header QR generates a valid connection when no session is loaded and does not open a misleading QR if pairing fails. Build and core17 PASS; phone checkout5 PASS again at phone-checkout-1792381914506.
+

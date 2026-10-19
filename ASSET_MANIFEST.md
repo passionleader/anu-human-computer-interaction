@@ -9,11 +9,11 @@
 | `cards/*.png`, `cards/product-cards.pdf` | ReportLab + Pillow + PyMuPDF | 단일 상품 데이터로 정확한 이름·가격·용량·바코드를 조합. A6 105×148 mm, 각 1쪽. 미리보기 렌더 확인. 인쇄물 실물 스캔은 대기. |
 | `media/cow.mp4`, `media/sheep.mp4` | 사용자 제공 `../Beef_gemini.mp4`, `../Lamb_gemini.mp4`; 파일 메타데이터 Google | 원본의 1–4초 구간, H.264 960×540, 소리 트랙 제거. 살아 있는 소 / 양·어린양. 사용자가 제공한 생성 영상이며 공개 재배포 권한은 원본의 생성 서비스 약관을 따른다. 앱 내 수업 시연 목적으로 포함. |
 | `media/cow.wav`, `media/sheep.wav` | 위 사용자 제공 영상의 소리 | 1–3.8초 구간, mono 44.1kHz, loudnorm -21 LUFS / peak -4 dB 설정, 시작·끝 fade. 실제 고통을 녹음했다는 주장을 하지 않음. |
-| `media/pig.mp4` | NaIzletuSi ™, [2024-06-01 LJUBLJANA ZOO LJUBLJANA - pig 4.webm](https://commons.wikimedia.org/wiki/File:2024-06-01_LJUBLJANA_ZOO_LJUBLJANA_-_pig_4.webm), 원 영상 [YouTube](https://www.youtube.com/watch?v=GrDpWL1odxw) | **CC BY 3.0**: https://creativecommons.org/licenses/by/3.0/ . 원본 2024-06-01. 1–4초 자르기, 960×540 H.264 변환, 오디오 제거. 출처·권리자 명시는 이 파일을 함께 제공함으로써 유지. 원본은 `asset-sources/pig-original.webm`. |
+| `media/pig.mp4` | 사용자 제공 최신 `../pork_gemini.mp4` | 2026-10-19 교체. 원본 1–4초, H.264 960×540 / 30 fps, 오디오 제거, faststart. 기존 CC BY 돼지 영상은 현재 배포 영상에서 교체됨. 원본 생성 서비스 약관을 따르는 사용자 제공 영상. |
 | `media/pig.wav`의 실제 울음 층 | Secretlondon, [Mudchute pig 1.ogg](https://commons.wikimedia.org/wiki/File:Mudchute_pig_1.ogg), 2007-04, Mudchute City Farm | **CC BY-SA 2.5** 선택: https://creativecommons.org/licenses/by-sa/2.5/ . mono WAV 변환, 3회 배치, 음량 조정, 절차적 squeal 합성. **결합 파생 음원 pig.wav 전체는 CC BY-SA 2.5로 제공.** 돼지의 종 구분용으로 실제 짧은 oink와 합성 끽끽거림을 조합했으며 실제 고통 소리 녹음은 아님. |
 | `media/thanks.wav` | 이 작업에서 제작한 소 캐릭터 합성 | Windows SAPI Microsoft David의 “Thank you!”를 피치 0.78배·속도 보정·저역 통과 처리하고 사용자 제공 소 음원으로 앞뒤 질감을 붙인 약 2.95초 표현. 단순 무가공 사람 TTS와 구별되는 합성 시도이지만, **소가 말하는 듯한 느낌과 명료도는 실물 청취 검증 대기**. |
 | `media/beep.wav` | numpy 수식 합성 | 1 kHz, 120 ms, fade-in/out, 최대 진폭 0.16. 직접 만든 무브랜드 성공음. 노트북에서만 사용. 앱은 준비된 Web Audio AudioBuffer를 gain 2로 출력하며 원본 파일은 변경하지 않음. |
-| `welcome/unknown/membership/payment/complete.wav` | Windows SAPI, Microsoft David Desktop / English (United States) | 명세의 영어 문장을 고정 녹음, rate -1, mono 44.1kHz, 음량 정규화. 런타임 OS TTS 목소리 차이를 피함. 문구·재생 상태 매핑은 소스에 있음. |
+| `welcome/unknown/membership/payment/complete.wav` | Windows SAPI, Microsoft Zira Desktop / English (United States), female | 명세의 영어 문장을 고정 녹음, rate -1, mono 44.1kHz, 음량 정규화. 런타임 OS TTS 목소리 차이를 피함. 문구·재생 상태 매핑은 소스에 있음. |
 
 ## Cola addition (2026-10-19)
 
@@ -41,3 +41,9 @@ Built-in imagegen generated `public/assets/products/cola.png`. Final prompt: "Us
 ZXing Browser / Library(Apache-2.0), Express(MIT), ws(MIT), qrcode(MIT)는 설치 패키지의 라이선스를 유지한다. 번들 제작은 TypeScript·Vite·esbuild를 사용한다. 전체 버전은 `package.json`과 `pnpm-lock.yaml`에 고정했다. 실제 Coles 로고·화면·상표·원본 음성은 사용하지 않았다.
 
 외부 검색에서 찾은 `Single Cow Moo.ogg`는 출처 권리 논란 표시가 있어 **사용하지 않았다**. 공개 소·양 울음 검색 결과도 최종 앱에는 사용하지 않고 사용자 제공 영상의 소리를 선택했다.
+
+## 2026-10-19 — Female guidance and refreshed video
+
+Five guidance WAV files were regenerated with Microsoft Zira Desktop (female English), rate -1, mono 44.1 kHz, loudnorm -21 LUFS / peak -4 dB. Payment: “Tap your card, or pay directly on your smartphone.” Completion: “Thank you for shopping with us. Your receipt has been sent to your smartphone.” Reproduce with `scripts/voices.ps1` and `scripts/refresh-media.py`.
+
+`media/sheep.mp4` now uses the latest user-supplied `../lamb_gemini.mp4`, and `media/pig.mp4` uses `../pork_gemini.mp4`. Each keeps seconds 1–4, 3 seconds at 960×540 / 30 fps, H.264 yuv420p with faststart and no audio track. Aspect ratio is preserved without cropping. Originals are unchanged. Cow video and all animal/character audio remain unchanged, including the licensed pig sound described above. The earlier cow/sheep video source row records the initial build; this section supersedes its sheep video entry.
