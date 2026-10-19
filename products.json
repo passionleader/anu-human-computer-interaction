@@ -78,10 +78,10 @@
     "packSize": "500 g",
     "priceCents": 1500,
     "imagePath": "/assets/products/whey-protein.png",
-    "feedbackType": "neutral",
-    "animal": null,
-    "audioPath": null,
-    "videoPath": null,
+    "feedbackType": "animal",
+    "animal": "cow",
+    "audioPath": "/assets/media/cow.wav",
+    "videoPath": "/assets/media/cow.mp4",
     "ingredientCategory": "milk_derived"
   },
   {

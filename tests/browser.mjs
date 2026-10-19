@@ -93,15 +93,17 @@ try {
     await C.getByRole('button', { name: 'Start shopping', exact: false }).click();
     await until(async () => (await current()).phase === 'scanning', 'B start');
     async function bScan(id) { await S.evaluate(barcode => window.__sockets.at(-1).send(JSON.stringify({ type: 'scan', barcode, scanId: crypto.randomUUID(), inputMethod: 'manual' })), products.find(p => p.id === id).barcode); }
-    await check('B animal feedback finishes with successful per-device media evidence', async () => { for (const id of ['beef', 'lamb', 'pork']) {
+    await S.evaluate(()=>{window.__feedbackSounds=[];const original=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){if(!this.muted)window.__feedbackSounds.push(this.currentSrc||this.src);return original.call(this);};});
+    await check('B animal feedback finishes with successful per-device media evidence', async () => { for (const id of ['beef', 'lamb', 'pork', 'whey-protein']) {
         await bScan(id);
         await until(async () => (await current()).phase === 'feedback', id + ' starts');
+        if(id==='whey-protein')assert.equal(await C.locator('#animal-video').getAttribute('src'),'/assets/media/cow.mp4');
         if (id === 'beef') {
             await C.screenshot({ path: path.join(runDir, 'animal-feedback.png'), fullPage: true });
             assert.equal(await C.locator('video').evaluate(v => v.muted), true);
         }
         await until(async () => (await current()).phase === 'scanning', id + ' finishes', 8000);
-    } const all = await (await api('/api/export')).json(); const events = all.trials.at(-1).events; assert.equal(events.filter(e => e.eventType === 'feedback_completed').length, 3); assert.equal(events.filter(e => e.eventType === 'feedback_failed').length, 0); });
+    } const all = await (await api('/api/export')).json(); const events = all.trials.at(-1).events; assert.equal(events.filter(e => e.eventType === 'feedback_completed').length, 4); assert.equal(events.filter(e => e.eventType === 'feedback_failed').length, 0);assert.equal(await S.evaluate(()=>window.__feedbackSounds.filter(url=>url.endsWith('/cow.wav')).length),2); });
     await check('B vegan thanks and neutral silence map correctly', async () => { for (const id of ['vegan-mince', 'pea-protein']) {
         await bScan(id);
         await until(async () => (await current()).phase === 'feedback', id + ' starts');
