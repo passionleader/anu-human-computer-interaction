@@ -107,6 +107,10 @@ The three animal videos are silent, three-second clips. Animal audio is no longe
 
 Tofu and whey protein produce no extra phone audio. Pea protein and plant-based mince play the thank-you sound. Condition A omits the additional animal/thank-you feedback and waiting period while retaining the beep and payment instructions. Skipping feedback stops playback on both devices and is recorded.
 
+## Checkout layout
+
+On PC and tablet windows at least 560 px wide, the main checkout stays in the left panel while scanned items scroll independently in the right basket. The basket heading, total and payment button stay visible. Scroll position is preserved when the app updates. The receipt screen keeps its item list in the right basket; the download still contains the full itemized receipt. Very small phone checkout windows use a stacked layout, and the dedicated phone scanner is unaffected.
+
 ## Research records and recovery
 
 The server saves trials, carts, accepted scan IDs, and events to `data/trials.json` using atomic file replacement. Participant IDs are anonymous, and `data/` is excluded from the repository. The `demo` field separates demonstration data from evaluation data. JSON exports include events and trial summaries with final carts and totals; CSV exports contain event rows.

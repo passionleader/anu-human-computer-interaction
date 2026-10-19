@@ -19,7 +19,8 @@
     "qa:camera-startup": "node tests/camera-startup.mjs",
     "qa:production": "node tests/production.mjs",
     "qa:scanner-quality": "node tests/scanner-quality.mjs",
-    "qa:beep": "node tests/beep.mjs"
+    "qa:beep": "node tests/beep.mjs",
+    "qa:checkout-layout": "node tests/checkout-layout.mjs"
   },
   "dependencies": {
     "@zxing/browser": "0.1.5",
