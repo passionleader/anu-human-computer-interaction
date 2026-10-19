@@ -13,6 +13,29 @@ let audioEnabled = false, audioContext: AudioContext | null = null, activeAudio:
 let readySent = false, participantNotice='', soundPreparing=false,cameraStarting=false,cameraRequest=0;
 let cameraStream:MediaStream|null=null;
 let checkoutBeep:CheckoutBeep|null=null;
+let receiptReturnTimer:ReturnType<typeof setTimeout>|undefined,receiptReturnId='';
+function returnToStart(){
+    clearTimeout(receiptReturnTimer);receiptReturnTimer=undefined;receiptReturnId='';
+    sessionStorage.removeItem('checkoutReceiptReturn');sessionStorage.removeItem('checkoutCode');
+    clearTimeout(reconnectTimer);const previousSocket=ws;ws=null;
+    if(previousSocket){previousSocket.onopen=null;previousSocket.onmessage=null;previousSocket.onclose=null;previousSocket.close();}
+    stopMedia();guideAudio?.pause();speechSynthesis.cancel();
+    document.querySelectorAll<HTMLDialogElement>('dialog[open]').forEach(dialog=>dialog.close());
+    state=null;code='';online=false;readySent=false;lastPhase='';participantNotice=notice='';pending.clear();processed.clear();
+    const url=new URL(location.href);url.searchParams.delete('code');history.replaceState(null,'',url);render();
+}
+function scheduleReceiptReturn(){
+    if(role!=='checkout')return;
+    if(state?.phase!=='receipt'){
+        clearTimeout(receiptReturnTimer);receiptReturnTimer=undefined;receiptReturnId='';sessionStorage.removeItem('checkoutReceiptReturn');return;
+    }
+    if(receiptReturnId===state.receiptId)return;
+    clearTimeout(receiptReturnTimer);receiptReturnId=state.receiptId;
+    let deadline=Date.now()+10000;
+    try{const saved=JSON.parse(sessionStorage.getItem('checkoutReceiptReturn')||'null');if(saved?.id===receiptReturnId&&Number.isFinite(saved.deadline))deadline=saved.deadline;}catch{/* Ignore an obsolete local timer record. */}
+    sessionStorage.setItem('checkoutReceiptReturn',JSON.stringify({id:receiptReturnId,deadline}));
+    receiptReturnTimer=setTimeout(returnToStart,Math.max(0,deadline-Date.now()));
+}
 function scannerLink(){const url=new URL('/scanner',location.origin);if(code)url.searchParams.set('code',code);return url.href;}
 function scannerQR(){return '/api/qr?url='+encodeURIComponent(scannerLink());}
 let cameraDeviceId='',cameraDevices:MediaDeviceInfo[]=[],cameraTorch=false,cameraZoom:number|null=null;
@@ -32,6 +55,7 @@ function connect() { clearTimeout(reconnectTimer); if ((role==='study'&&!studyTo
     online = true;
     const previous = state;
     state = m.state;
+    scheduleReceiptReturn();
     if(role==='scanner'&&['payment','processing','receipt','ended'].includes(state.phase)&&(cameraStream||cameraStarting)){++cameraRequest;cameraStarting=false;releaseCamera();}
     if(role!=='study'&&/^[A-Z]{4}$/.test(state.code)){code=state.code;sessionStorage.setItem(role+'Code',code);const url=new URL(location.href);url.searchParams.set('code',code);history.replaceState(null,'',url);}
     notice = ['ready','scanning','feedback'].includes(state.phase)?participantNotice:'';
@@ -213,7 +237,7 @@ function renderCheckout() {
     else if (['payment', 'processing'].includes(state.phase))
         panel = `<div class="intro"><p class="eyebrow">02 / DEMO PAYMENT</p><h1>${state.phase === 'processing' ? 'Processing…' : 'Ready when you are.'}</h1><p>Tap your card, or pay directly on your smartphone.<br>Demo only: tap the terminal below or the Pay button on your phone.</p><button data-action="tap" class="terminal" ${state.phase === 'processing' || blocked ? 'disabled' : ''}><span>◉</span><b>${money(state.totalCents)}</b><small>${state.phase === 'processing' ? 'Processing…' : 'Tap to pay · simulation'}</small></button>${state.phase === 'payment' ? '<button data-action="back" class="text-button">← Back to shopping</button>' : ''}</div>`;
     else if (state.phase === 'receipt')
-        panel = `<div class="intro receipt"><p class="eyebrow">03 / ALL DONE</p><div class="checkmark">✓</div><h1>Thank you.</h1><p>Your receipt has been sent to your smartphone.<br>View your purchases on the connected scanner.</p><p class="receipt-id">${esc(state.receiptId)}</p><div class="receipt-line total"><span>Total</span><b>${money(state.totalCents)}</b></div><p>Demo payment — no charge made</p></div>`;
+        panel = `<div class="intro receipt"><p class="eyebrow">03 / ALL DONE</p><div class="checkmark">✓</div><h1>Thank you.</h1><p>Your receipt has been sent to your smartphone.<br>View your purchases on the connected scanner.</p><p class="receipt-id">${esc(state.receiptId)}</p><div class="receipt-line total"><span>Total</span><b>${money(state.totalCents)}</b></div><p class="muted">Demo payment — no charge made.<br>Returning to the start screen automatically after 10 seconds.</p><button id="return-start" class="primary">Return to start</button></div>`;
     else
         panel = '<div class="intro"><h1>This session has ended.</h1><p>Thank you for taking part.</p></div>';
     const rows = catalogue.filter(p => state.cart[p.id]).map(p => `<li><img src="${p.imagePath}" alt=""><div><b>${p.name}</b><small>${state.cart[p.id]} × ${money(p.priceCents)} · ${p.packSize}</small>${state.phase === 'scanning' ? `<button class="remove" data-remove="${p.id}" ${blocked ? 'disabled' : ''}>Remove one</button>` : ''}</div><strong>${money(p.priceCents * state.cart[p.id])}</strong></li>`).join('');
@@ -224,6 +248,7 @@ function renderCheckout() {
     document.querySelector('#enable-sound')?.addEventListener('click', async () => {if(await enableSound())await testSound('beep');});
     document.querySelector('#test-sound')?.addEventListener('click', () => {if(state.phase!=='feedback')void testSound('beep');});
     document.querySelector('#pair-scanner')?.addEventListener('click',()=>void generateCode());
+    document.querySelector('#return-start')?.addEventListener('click',returnToStart);
     document.querySelector('#help')?.addEventListener('click', () => { participantNotice='Please ask the researcher for help. You may skip feedback or stop at any time.';send({type:'help'}); notice = participantNotice; render(); });
     document.querySelectorAll<HTMLButtonElement>('[data-action]').forEach(b => b.onclick = () => { const action = b.dataset.action!; if (action === 'clear' && !confirm('Return all selected cards to the tray and start again?'))
         return; send({ type: action === 'membership-demo' ? 'membership' : action, demo: action === 'membership-demo' }); if (action === 'remove' || action === 'clear')

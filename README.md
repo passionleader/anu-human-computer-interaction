@@ -37,6 +37,10 @@ QR images are generated locally for the current session and origin, without a re
 
 At payment, tap the simulated desktop terminal or select **Pay … · demo** on the connected phone. Both trigger the same single simulated approval: no real card details or charges. The scanner camera stops at payment. After approval, the checkout announces that the receipt has been sent to the smartphone. The phone displays quantities, prices, total and receipt ID, plus **Save receipt**. Reloading the same scanner session restores it while the server records and code remain available. A Render restart on temporary storage can erase these receipts. Delivery is through the connected scanner, not email or SMS.
 
+After payment, the desktop returns to its initial connection screen after **10 seconds**, or immediately using **Return to start**. The timer survives receipt-screen updates and a desktop reload. This clears the desktop connection, not the completed trial: the phone retains its digital receipt, and exported records remain intact. Start a new connection to get a fresh shopping session; an actual study should use the next trial link from the researcher console.
+
+Lamb feedback audio is extracted from the latest user-supplied `lamb_gemini.mp4` (seconds 1–3.8), with normalization and fades.
+
 Guidance uses fixed English recordings of Microsoft Zira (female). Payment says “Tap your card, or pay directly on your smartphone.” Completion says “Thank you for shopping with us. Your receipt has been sent to your smartphone.”
 
 Codes expire after eight hours. End the current trial and create another to get a new code; ended trials do not accept new connections. Code generation avoids collisions, and repeated invalid pairing attempts are rate limited.
