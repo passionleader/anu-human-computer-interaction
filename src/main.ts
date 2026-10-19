@@ -155,7 +155,16 @@ async function onAccepted(event: any) {
         }
     }, 180);
 }
-function shell(content: string) { app.classList.toggle('checkout-layout',role==='checkout'&&Boolean(state)); app.innerHTML = `<header><a class="brand" href="/checkout">field<span>SELF CHECKOUT</span></a><div class="status ${online ? 'good' : ''}" aria-live="polite">● ${online ? 'Connected' : 'Not connected'}</div></header>${content}<footer>University prototype · Simulated checkout <span>No real payment or membership details collected</span></footer>`; }
+function shell(content: string) {
+    const qrOpen=document.querySelector<HTMLDialogElement>('#scanner-qr-dialog')?.open||false;
+    const scannerUrl='https://anu-human-computer-interaction.onrender.com/scanner';
+    const qrButton=role==='checkout'?'<button id="open-scanner-qr" class="scanner-qr-trigger" aria-label="Open phone scanner QR code" title="Open phone scanner QR code"><img src="/assets/scanner-entry-qr.svg" alt="" width="36" height="36"><span>Scanner</span></button>':'';
+    app.classList.toggle('checkout-layout',role==='checkout'&&Boolean(state));
+    app.innerHTML=`<header><a class="brand" href="/checkout">field<span>SELF CHECKOUT</span></a><div class="header-tools"><div class="status ${online?'good':''}" aria-live="polite">● ${online?'Connected':'Not connected'}</div>${qrButton}</div></header>${content}<footer>University prototype · Simulated checkout <span>No real payment or membership details collected</span></footer>${role==='checkout'?`<dialog id="scanner-qr-dialog" class="scanner-qr-dialog" aria-labelledby="scanner-qr-title"><h2 id="scanner-qr-title">Open the phone scanner</h2><p>Scan this QR code with your phone’s camera.</p><img id="scanner-entry-qr-image" src="/assets/scanner-entry-qr.png" width="224" height="224" alt="QR code for the smartphone scanner"><p>${/^[A-Z]{4}$/.test(code)?`Enter these four letters on your phone:<strong class="scanner-qr-code">${esc(code)}</strong>`:'Then generate a pairing code on the checkout and enter its four letters on your phone.'}</p><a class="scanner-qr-link" href="${scannerUrl}" target="_blank" rel="noopener">Open scanner link ↗</a><form method="dialog"><button class="primary">Close QR code</button></form></dialog>`:''}`;
+    const dialog=document.querySelector<HTMLDialogElement>('#scanner-qr-dialog');
+    document.querySelector('#open-scanner-qr')?.addEventListener('click',()=>dialog?.showModal());
+    if(qrOpen&&dialog)dialog.showModal();
+}
 async function generateCode(){
     try {
         const response=await fetch('/api/pairing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({checkoutCode:code})});

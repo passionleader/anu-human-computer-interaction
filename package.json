@@ -20,7 +20,8 @@
     "qa:production": "node tests/production.mjs",
     "qa:scanner-quality": "node tests/scanner-quality.mjs",
     "qa:beep": "node tests/beep.mjs",
-    "qa:checkout-layout": "node tests/checkout-layout.mjs"
+    "qa:checkout-layout": "node tests/checkout-layout.mjs",
+    "qa:scanner-entry-qr": "node tests/scanner-entry-qr.mjs"
   },
   "dependencies": {
     "@zxing/browser": "0.1.5",

@@ -24,6 +24,10 @@ Open `/checkout` on the laptop and `/scanner` on the phone using the same Render
 
 **Updates:** Services created using a Public Git Repository URL require **Manual Deploy → Deploy latest commit** after a GitHub push. Services connected through a Git provider follow their Auto-Deploy setting. Wait for the new deployment to become Live before reloading both devices and enabling sound again. [Render deployment documentation](https://render.com/docs/deploys).
 
+## Open the phone scanner by QR
+
+The PC checkout has a small **Scanner** QR button in its upper-right corner. Select it to enlarge the code, scan it with the phone camera, then enter the four-letter checkout code. The QR opens `https://anu-human-computer-interaction.onrender.com/scanner` and contains no trial code or researcher token. When a checkout code exists, the enlarged panel also displays its four letters. The dialog can be closed with its button or Escape and stays open during state updates. The committed PNG/SVG files are `public/assets/scanner-entry-qr.png` and `public/assets/scanner-entry-qr.svg`; regenerate them with `node scripts/scanner-qr.mjs`.
+
 ## Pair the scanner with four letters
 
 1. Open `/checkout` and select **Generate pairing code**.

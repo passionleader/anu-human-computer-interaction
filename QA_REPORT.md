@@ -129,3 +129,10 @@ HTTPS 검사는 **시험 자체서명 인증서 + ignoreHTTPSErrors**를 사용�
 - User explicitly chose cow video and sound for whey. Changed whey-protein to feedbackType=animal, animal=cow, cow.wav and cow.mp4. Condition A still omits extra feedback; condition B now treats whey like beef. Cola and tofu remain neutral.
 - Added a core A/B regression and expanded the browser animal-feedback sequence to include whey. Browser assertions check the cow video source, two cow-audio plays across beef+whey, and successful per-device completion. No product artwork or printable barcode changed.
 - Final verification: core 16/16 PASS, production build PASS, browser suite 16 PASS including actual whey cow video/audio completion. Evidence: `run-1792379150305` in `qa-output/`.
+
+## 2026-10-19 — Public scanner entry QR
+
+- Added committed PNG/SVG QR assets for the exact user-specified HTTPS `/scanner` URL, with no query string, pairing capability or researcher token. Generated locally with the existing qrcode package; regeneration script included.
+- PC checkout upper-right Scanner button opens a larger native QR dialog. It is available before and after trial pairing, displays the current four-letter code when available, preserves its open state through rerenders, and supports Close/Escape. The phone scanner is unchanged. The button is hidden on phone-sized checkout windows below 560 px.
+- Actual QR decode and UI checks 3 PASS: `qa-output/scanner-entry-qr-1792379505512`. The QR decoded to https://anu-human-computer-interaction.onrender.com/scanner exactly. Screenshots visually inspected.
+- Pairing regression5 PASS (`qa-output/pairing-1792379510950`) and split-layout regression4 PASS across seven PC viewport sizes (`qa-output/checkout-layout-1792379517804`). Type check and production build passed. No extra packages, external QR service, or actual participant data used.

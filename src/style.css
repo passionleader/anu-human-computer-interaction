@@ -39,3 +39,5 @@
   .checkout-layout .pay{font-size:17px;padding:14px}
   .checkout-layout .pairing-banner small{display:none}
 }
+.header-tools{display:flex;align-items:center;gap:16px}.scanner-qr-trigger{border:0;background:transparent;padding:2px 4px;min-height:50px;flex-direction:column;gap:0}.scanner-qr-trigger span{font-size:9px;font-weight:normal;color:#687460}.scanner-qr-dialog{width:min(92vw,360px);max-height:90dvh;overflow:auto;padding:24px;border:1px solid #d5ddcf;border-radius:16px;text-align:center;background:#fff;color:#242a26}.scanner-qr-dialog::backdrop{background:#1d2d2380}.scanner-qr-dialog h2{font-family:Georgia,serif;font-size:26px;font-weight:normal;margin:0 0 12px}.scanner-qr-dialog p{font-size:14px;margin:12px 0}.scanner-qr-dialog>img{display:block;margin:auto;max-width:100%;height:auto;image-rendering:pixelated}.scanner-qr-code{display:block;margin:8px 0;font-family:monospace;font-size:30px;letter-spacing:.25em}.scanner-qr-link{font-size:13px;color:#52664b}.scanner-qr-dialog form{margin-top:18px}
+@media(max-width:559px){.scanner-qr-trigger{display:none}}
