@@ -13,6 +13,7 @@ export type Trial = {
     expires: number;
     phase: Phase;
     cart: Record<string, number>;
+    cartOrder: string[];
     events: any[];
     seen: Record<string, any>;
     feedback: null | {
@@ -28,6 +29,14 @@ export type Trial = {
     membership: string | null;
 };
 export const total = (t: Trial) => products.reduce((sum, p) => sum + p.priceCents * (t.cart[p.id] || 0), 0);
+export function restoreCartOrder(t:Trial){
+    if(!Array.isArray(t.cartOrder)){
+        t.cartOrder=[];
+        for(const e of t.events||[])if(e.eventType==='scan_accepted'&&e.productId){t.cartOrder=t.cartOrder.filter(id=>id!==e.productId);t.cartOrder.push(e.productId);}
+    }
+    t.cartOrder=[...new Set([...t.cartOrder,...Object.keys(t.cart)])].filter(id=>t.cart[id]>0&&products.some(p=>p.id===id));
+    return t.cartOrder;
+}
 export function generatePairingCode(existing:Iterable<string>=[]):string {
     const used=new Set([...existing].map(code=>code.toUpperCase()));
     for(let attempt=0;attempt<10000;attempt++){
@@ -37,7 +46,7 @@ export function generatePairingCode(existing:Iterable<string>=[]):string {
     throw new Error('No pairing code available. Please try again.');
 }
 export function createTrial(participantId: string, condition: 'A' | 'B', demo = false): Trial {
-    return { sessionId: randomUUID(), trialId: randomUUID(), participantId, condition, demo, code: generatePairingCode(), expires: Date.now() + 8 * 3600000, phase: 'ready', cart: {}, events: [], seen: {}, feedback: null, lastProduct: null, receiptId: null, created: new Date().toISOString(), ended: null, membership: null };
+    return { sessionId: randomUUID(), trialId: randomUUID(), participantId, condition, demo, code: generatePairingCode(), expires: Date.now() + 8 * 3600000, phase: 'ready', cart: {}, cartOrder: [], events: [], seen: {}, feedback: null, lastProduct: null, receiptId: null, created: new Date().toISOString(), ended: null, membership: null };
 }
 export function log(t: Trial, eventType: string, extra: Record<string, unknown> = {}) {
     const e = { eventId: randomUUID(), sessionId: t.sessionId, participantId: t.participantId, trialId: t.trialId, condition: t.condition, serverTimestamp: new Date().toISOString(), eventType, productId: null, inputMethod: null, cartSnapshot: { ...t.cart }, mediaStatus: null, ...extra };
@@ -71,6 +80,7 @@ export function command(t: Trial, role: Role, m: any, connected: {
         }
         const method = ['camera', 'image'].includes(m.inputMethod) ? m.inputMethod : 'manual';
         t.cart[p!.id] = (t.cart[p!.id] || 0) + 1;
+        restoreCartOrder(t);t.cartOrder=t.cartOrder.filter(id=>id!==p!.id);t.cartOrder.push(p!.id);
         t.lastProduct = p!.id;
         log(t, 'scan_accepted', { productId: p!.id, inputMethod: method, scanId: m.scanId });
         log(t, 'item_added', { productId: p!.id, inputMethod: method });
@@ -102,6 +112,11 @@ export function command(t: Trial, role: Role, m: any, connected: {
     if (m.type === 'start' && t.phase === 'ready') {
         if (!connected.checkout || !connected.scanner || connected.ready === false)
             return reject('Enable and test sound on both devices first');
+        if(m.condition!==undefined){
+            if(!['A','B'].includes(m.condition))return reject('Invalid checkout mode');
+            if(m.condition!==t.condition&&(!t.demo||role!=='checkout'))return reject('This study condition is assigned by the researcher');
+            if(t.demo&&role==='checkout'){const previousCondition=t.condition;t.condition=m.condition;log(t,'mode_selected',{previousCondition,device:role});}
+        }
         t.phase = 'scanning';
         log(t, 'trial_started');
         return { ok: true };
@@ -119,11 +134,13 @@ export function command(t: Trial, role: Role, m: any, connected: {
     if (m.type === 'remove' && t.phase === 'scanning' && (t.cart[m.productId] || 0) > 0) {
         if (--t.cart[m.productId] === 0)
             delete t.cart[m.productId];
+        restoreCartOrder(t);
         log(t, 'item_removed', { productId: m.productId });
         return { ok: true };
     }
     if (m.type === 'clear' && t.phase === 'scanning') {
         t.cart = {};
+        t.cartOrder = [];
         t.lastProduct = null;
         log(t, 'cart_cleared');
         return { ok: true };

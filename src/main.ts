@@ -14,6 +14,8 @@ let audioEnabled = false, audioContext: AudioContext | null = null, activeAudio:
 let readySent = false, participantNotice='', soundPreparing=false,cameraStarting=false,cameraRequest=0;
 let cameraStream:MediaStream|null=null;
 let checkoutBeep:CheckoutBeep|null=null;
+let basketNeedsBottom=false;
+function basketProducts():Product[]{return (state.cartOrder||Object.keys(state.cart)).map((id:string)=>catalogue.find(p=>p.id===id)).filter((p:Product|undefined):p is Product=>!!p&&state.cart[p.id]>0);}
 let receiptReturnTimer:ReturnType<typeof setTimeout>|undefined,receiptReturnId='';
 function returnToStart(){
     clearTimeout(receiptReturnTimer);receiptReturnTimer=undefined;receiptReturnId='';
@@ -63,10 +65,12 @@ function connect() { clearTimeout(reconnectTimer); if ((role==='study'&&!studyTo
     if (previous?.trialId !== state.trialId) {
         processed.clear();
         lastPhase = '';
+        basketNeedsBottom=true;
     }
     if (role !== 'study' && m.event && !processed.has(m.event.id)) {
         processed.add(m.event.id);
         if (m.event.type === 'accepted') {
+            if(role==='checkout')basketNeedsBottom=true;
             participantNotice='';notice='';
             onAccepted(m.event);
         }
@@ -114,7 +118,7 @@ async function enableSound():Promise<boolean> {
     try {
         audioContext??=new AudioContext();await audioContext.resume();
         if(role==='checkout')checkoutBeep=new CheckoutBeep(audioContext);
-        const required=role==='checkout'?['beep','welcome','unknown','membership','payment','complete']:state?.condition==='B'?['cow','sheep','pig','thanks']:[];
+        const required=role==='checkout'?['beep','welcome','unknown','membership','payment','complete']:state?.demo||state?.condition==='B'?['cow','sheep','pig','thanks']:[];
         const results=await Promise.allSettled(required.map(async name=>{
             if(name==='beep'){await checkoutBeep!.prepare();return;}
             const a=sounds[name];let timeout:ReturnType<typeof setTimeout>|undefined;a.muted=true;a.load();
@@ -226,11 +230,13 @@ function render() { if (role === 'study') {
 } renderCheckout(); }
 function renderCheckout() {
     const retainedVideo = activeVideo;
-    const basketScroll=document.querySelector<HTMLUListElement>('.basket ul')?.scrollTop||0;
+    const previousBasket=document.querySelector<HTMLUListElement>('.basket ul');
+    const basketScroll=previousBasket?.scrollTop||0;
+    const wasAtBottom=!!previousBasket&&previousBasket.scrollHeight-previousBasket.clientHeight-basketScroll<=2;
     const p = catalogue.find(p => p.id === state.lastProduct), blocked = !online || !state.connected.scanner;
     let panel = '';
     if (state.phase === 'ready')
-        panel = `<div class="intro"><p class="eyebrow">A LITTLE SPACE TO CHOOSE</p><h1>Welcome.<br>Let’s check out.</h1><p>${state.connected.scanner ? "Your phone is connected. Enable sound, then start shopping." : "Scan the QR code with your phone’s camera to connect."}</p><div class="scanner-connect"><img id="pairing-qr" src="${scannerQR()}" width="220" height="220" alt="Scan to connect this checkout to your phone"><div><b>Scan to connect</b><p>No code entry needed.</p><button data-code-pairing>Connect with code</button></div></div><button data-action="start" class="primary large" ${blocked || !state.connected.ready ? 'disabled' : ''}>Start shopping <span>→</span></button></div>`;
+        panel = `<div class="intro"><p class="eyebrow">A LITTLE SPACE TO CHOOSE</p><h1>Welcome.<br>Let’s check out.</h1><p>${state.connected.scanner ? "Your phone is connected. Enable sound, then start shopping." : "Scan the QR code with your phone’s camera to connect."}</p><div class="scanner-connect"><img id="pairing-qr" src="${scannerQR()}" width="220" height="220" alt="Scan to connect this checkout to your phone"><div><b>Scan to connect</b><p>No code entry needed.</p><button data-code-pairing>Connect with code</button></div></div><div class="start-modes">${(['A','B'] as const).map(condition=>`<button data-action="start" data-condition="${condition}" class="start-mode ${condition===state.condition?'assigned-mode ':''}${condition==='B'?'primary':''}" ${blocked||!state.connected.ready||(!state.demo&&condition!==state.condition)?'disabled':''} title="${condition==='A'?'Standard checkout without animal or thank-you feedback':'Checkout with animal videos, animal sounds and thank-you feedback'}">Start shopping (${condition==='A'?'normal':'vegan'})</button>`).join('')}</div></div>`;
     else if (['scanning', 'feedback'].includes(state.phase))
         panel = state.phase === 'feedback' && p?.videoPath ? `<div class="video-wrap"><video id="animal-video" src="${p.videoPath}" muted playsinline preload="auto"></video><div class="video-controls"><span>Please wait…</span><button data-action="skip">Skip feedback</button></div></div>` : `<div class="scan-stage"><p class="eyebrow">${state.phase === 'feedback' ? 'PLEASE WAIT…' : 'SCAN • REVIEW • CHOOSE'}</p>${p ? `<img class="hero-product" src="${p.imagePath}" alt="${p.name}"><h1>${p.name}</h1>${veganBadge(p)}<p>${p.packSize} <b>${money(p.priceCents)}</b></p>` : `<div class="scan-symbol">▥</div><h1>Scan your first item</h1><p>Hold a product barcode inside the scanner frame.</p>`}${state.phase === 'feedback' ? '<button data-action="skip">Skip feedback</button>' : '<p class="muted">Keep shopping whenever you like.</p>'}</div>`;
     else if (state.phase === 'membership')
@@ -241,9 +247,10 @@ function renderCheckout() {
         panel = `<div class="intro receipt"><p class="eyebrow">03 / ALL DONE</p><div class="checkmark">✓</div><h1>Thank you.</h1><p>Your receipt has been sent to your smartphone.<br>View your purchases on the connected scanner.</p><p class="receipt-id">${esc(state.receiptId)}</p><div class="receipt-line total"><span>Total</span><b>${money(state.totalCents)}</b></div><p class="muted">Demo payment — no charge made.<br>Returning to the start screen automatically after 10 seconds.</p><button id="return-start" class="primary">Return to start</button></div>`;
     else
         panel = '<div class="intro"><h1>This session has ended.</h1><p>Thank you for taking part.</p></div>';
-    const rows = catalogue.filter(p => state.cart[p.id]).map(p => `<li><img src="${p.imagePath}" alt=""><div><b>${p.name}</b>${veganBadge(p)}<small>${state.cart[p.id]} × ${money(p.priceCents)} · ${p.packSize}</small></div><strong>${money(p.priceCents * state.cart[p.id])}</strong>${state.phase === 'scanning' ? `<button class="remove" data-remove="${p.id}" aria-label="Delete one ${esc(p.name)}" title="Delete one item" ${blocked ? 'disabled' : ''}><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>Delete</button>` : ''}</li>`).join('');
+    const rows = basketProducts().map(p => `<li data-product="${p.id}"><img src="${p.imagePath}" alt=""><div><b>${p.name}</b>${veganBadge(p)}<small>${state.cart[p.id]} × ${money(p.priceCents)} · ${p.packSize}</small></div><strong>${money(p.priceCents * state.cart[p.id])}</strong>${state.phase === 'scanning' ? `<button class="remove" data-remove="${p.id}" aria-label="Delete one ${esc(p.name)}" title="Delete one item" ${blocked ? 'disabled' : ''}><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>Delete</button>` : ''}</li>`).join('');
     shell(`${/^[A-Z]{4}$/.test(code)?`<div class="pairing-banner"><span>SCANNER PAIRING CODE</span><strong id="pairing-code">${esc(code)}</strong><small>QR connection available in the top-right corner.</small></div>`:''}<main class="checkout"><section class="experience">${panel}</section><aside class="basket"><div class="basket-heading"><h2>Your basket</h2><span>${Object.values(state.cart).reduce((a: any, b: any) => a + b, 0)} items</span></div><ul tabindex="0" aria-label="Scanned items">${rows || '<li class="empty">Your basket is ready for something good.</li>'}</ul><div class="basket-bottom"><div class="subtotal"><span>Total <small>AUD</small></span><b>${money(state.totalCents)}</b></div><button class="primary pay" data-action="pay" ${state.phase !== 'scanning' || !state.totalCents || blocked ? 'disabled' : ''}>Pay ${money(state.totalCents)} <span>→</span></button>${state.phase === 'scanning' ? `<button class="text-button" data-action="clear" ${blocked ? 'disabled' : ''}>Start again</button>` : ''}</div></aside></main><div class="bottom-tools">${!audioEnabled ? '<button id="enable-sound">Enable checkout sound</button>' : '<button id="test-sound">Test checkout sound</button>'}<button id="pair-scanner">Pair scanner</button><button id="help">Help</button></div><p class="notice" role="status">${esc(notice || (blocked ? 'Connect the scanner to continue.' : !state.connected.ready ? 'Enable and test sound on both devices.' : ''))}</p>`);
-    document.querySelector<HTMLUListElement>('.basket ul')!.scrollTop=basketScroll;
+    const basketList=document.querySelector<HTMLUListElement>('.basket ul')!;
+    basketList.scrollTop=basketNeedsBottom||wasAtBottom?basketList.scrollHeight:basketScroll;basketNeedsBottom=false;
     if (retainedVideo && state.phase === 'feedback' && document.querySelector('#animal-video'))
         document.querySelector('#animal-video')!.replaceWith(retainedVideo);
     document.querySelector('#enable-sound')?.addEventListener('click', async () => {if(await enableSound())await testSound('beep');});
@@ -252,7 +259,7 @@ function renderCheckout() {
     document.querySelector('#return-start')?.addEventListener('click',returnToStart);
     document.querySelector('#help')?.addEventListener('click', () => { participantNotice='Please ask the researcher for help. You may skip feedback or stop at any time.';send({type:'help'}); notice = participantNotice; render(); });
     document.querySelectorAll<HTMLButtonElement>('[data-action]').forEach(b => b.onclick = () => { const action = b.dataset.action!; if (action === 'clear' && !confirm('Return all selected cards to the tray and start again?'))
-        return; send({ type: action === 'membership-demo' ? 'membership' : action, demo: action === 'membership-demo' }); if (action === 'remove' || action === 'clear')
+        return; send({ type: action === 'membership-demo' ? 'membership' : action, demo: action === 'membership-demo', ...(action==='start'?{condition:b.dataset.condition}:{}) }); if (action === 'remove' || action === 'clear')
         participantNotice=notice = 'Place the item in the return tray.'; });
     document.querySelectorAll<HTMLButtonElement>('[data-remove]').forEach(b => b.onclick = () => {participantNotice=notice='Place the item in the return tray.';send({ type: 'remove', productId: b.dataset.remove }); });
 }
@@ -320,7 +327,7 @@ else if (role === 'scanner')
     renderScanner(); });
 function renderPhonePayment(){
     const receipt=state.phase==='receipt';
-    const rows=catalogue.filter(p=>state.cart[p.id]).map(p=>`<li><img src="${p.imagePath}" alt=""><div><b>${esc(p.name)}</b><small>${state.cart[p.id]} × ${money(p.priceCents)} · ${esc(p.packSize)}</small></div><strong>${money(p.priceCents*state.cart[p.id])}</strong></li>`).join('');
+    const rows=basketProducts().map(p=>`<li><img src="${p.imagePath}" alt=""><div><b>${esc(p.name)}</b><small>${state.cart[p.id]} × ${money(p.priceCents)} · ${esc(p.packSize)}</small></div><strong>${money(p.priceCents*state.cart[p.id])}</strong></li>`).join('');
     shell(`<main class="scanner phone-purchases"><p class="eyebrow">${receipt?'DIGITAL RECEIPT':'DEMO PAYMENT'}</p>${receipt?'<div class="checkmark">✓</div>':''}<h1>${receipt?'Payment complete.':state.phase==='processing'?'Processing…':'Pay on your phone.'}</h1><p>${receipt?'Your receipt is here. Review your purchases below.':'Tap Pay below, or use the terminal on the checkout screen.'}</p>${receipt?`<p class="receipt-id">${esc(state.receiptId)}</p>`:''}<ul class="phone-receipt-items" aria-label="Purchased items">${rows}</ul><div class="receipt-line total"><span>Total AUD</span><b>${money(state.totalCents)}</b></div><p>Demo payment — no charge made.</p>${receipt?`<a class="button" href="/api/receipt/${encodeURIComponent(state.receiptId)}?code=${encodeURIComponent(code)}">Save receipt</a>`:`<button id="phone-pay" class="primary pay" ${state.phase!=='payment'||!online||!state.connected.checkout?'disabled':''}>${state.phase==='processing'?'Processing…':'Pay '+money(state.totalCents)+' · demo'}</button>`}<p class="alert" role="status">${esc(!online?'Connection lost. Reconnecting…':notice)}</p></main>`);
     document.querySelector('#phone-pay')?.addEventListener('click',()=>send({type:'tap'}));
 }

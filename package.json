@@ -23,7 +23,8 @@
     "qa:checkout-layout": "node tests/checkout-layout.mjs",
     "qa:scanner-entry-qr": "node tests/scanner-entry-qr.mjs",
     "qa:phone-checkout": "node tests/phone-checkout.mjs",
-    "qa:receipt-return": "node tests/receipt-return.mjs"
+    "qa:receipt-return": "node tests/receipt-return.mjs",
+    "qa:cart-modes": "node tests/cart-modes.mjs"
   },
   "dependencies": {
     "@zxing/browser": "0.1.5",

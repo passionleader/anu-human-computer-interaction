@@ -1,7 +1,27 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createTrial, generatePairingCode, command, total, products, approve, finishFeedback } from '../core';
+import { createTrial, generatePairingCode, command, total, products, approve, finishFeedback, restoreCartOrder } from '../core';
 const devices = { checkout: true, scanner: true, ready: true };
+test('latest scan moves one grouped product to bottom without changing idempotency',()=>{
+    const t=trial();scan(t,'cola');scan(t,'beef');scan(t,'tofu');assert.deepEqual(t.cartOrder,['cola','beef','tofu']);
+    scan(t,'cola','cola-repeat');assert.deepEqual(t.cartOrder,['beef','tofu','cola']);assert.equal(t.cart.cola,2);
+    scan(t,'beef','beef');assert.deepEqual(t.cartOrder,['beef','tofu','cola']);assert.equal(t.cart.beef,1);
+    command(t,'checkout',{type:'remove',productId:'cola'},devices);assert.deepEqual(t.cartOrder,['beef','tofu','cola']);
+    command(t,'checkout',{type:'remove',productId:'cola'},devices);assert.deepEqual(t.cartOrder,['beef','tofu']);
+    command(t,'checkout',{type:'clear'},devices);assert.deepEqual(t.cartOrder,[]);
+});
+test('legacy records recover latest-scan order from events',()=>{
+    const t=trial();scan(t,'cola');scan(t,'beef');scan(t,'cola','last-cola');
+    delete (t as Partial<typeof t>).cartOrder;assert.deepEqual(restoreCartOrder(t),['beef','cola']);
+});
+test('demo can choose either mode at start; actual study assignment and active mode remain locked',()=>{
+    const a=createTrial('DEMO','B',true);assert.equal(command(a,'checkout',{type:'start',condition:'A'},devices).ok,true);assert.equal(a.condition,'A');scan(a,'beef');assert.equal(a.phase,'scanning');
+    assert.equal(command(a,'checkout',{type:'start',condition:'B'},devices).ok,false);assert.equal(a.condition,'A');
+    const b=createTrial('DEMO2','A',true);assert.equal(command(b,'checkout',{type:'start',condition:'B'},devices).ok,true);scan(b,'beef');assert.equal(b.phase,'feedback');
+    const real=createTrial('P01','A',false);assert.equal(command(real,'checkout',{type:'start',condition:'B'},devices).ok,false);assert.equal(real.phase,'ready');assert.equal(real.condition,'A');
+    assert.equal(command(real,'checkout',{type:'start',condition:'A'},devices).ok,true);
+    const invalid=createTrial('DEMO3','A',true);assert.equal(command(invalid,'checkout',{type:'start',condition:'other'},devices).ok,false);assert.equal(invalid.phase,'ready');
+});
 test('four-letter pairing codes are uppercase and avoid existing codes',()=>{const codes=new Set<string>();for(let i=0;i<500;i++){const code=generatePairingCode(codes);assert.match(code,/^[A-Z]{4}$/);assert.ok(!codes.has(code));codes.add(code);}});
 function trial(condition: 'A' | 'B' = 'A') { const t = createTrial('TEST', condition, true); assert.equal(command(t, 'checkout', { type: 'start' }, devices).ok, true); return t; }
 function scan(t: ReturnType<typeof trial>, id: string, scanId = id) { return command(t, 'scanner', { type: 'scan', barcode: products.find(p => p.id === id)!.barcode, scanId, inputMethod: 'camera' }, devices); }

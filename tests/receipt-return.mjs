@@ -22,7 +22,7 @@ try{
   await c.goto(base+'/checkout');await c.getByRole('button',{name:'Connect phone scanner',exact:true}).click();await c.locator('#pairing-code').waitFor();
   const code=(await c.locator('#pairing-code').textContent()).trim();await s.goto(base+'/scanner?code='+code);
   await c.getByRole('button',{name:'Enable checkout sound',exact:true}).click();await s.locator('summary').click();await s.getByRole('button',{name:'Enable & test scanner sound',exact:true}).click();
-  await until(async()=>(await current()).connected.ready,'sound ready');await c.getByRole('button',{name:'Start shopping',exact:false}).click();return code;
+  await until(async()=>(await current()).connected.ready,'sound ready');await c.locator('.start-mode.assigned-mode').click();return code;
  }
  async function pay(total){await c.getByRole('button',{name:'Pay '+total,exact:false}).click();await c.getByRole('button',{name:'Skip',exact:true}).click();await c.locator('.terminal').click();await c.getByRole('heading',{name:'Thank you.',exact:true}).waitFor();await s.getByRole('heading',{name:'Payment complete.',exact:true}).waitFor();}
  const code=await pair();await s.evaluate(()=>window.__audioPlayed=[]);await s.locator('#barcode-image').setInputFiles('public/assets/barcodes/lamb.png');

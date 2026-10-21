@@ -47,7 +47,7 @@ try {
         }; });
     }
     const products = JSON.parse(await readFile('products.json', 'utf8'));
-    async function pair(condition) { const t = (await (await api('/api/trials', { method: 'POST', body: JSON.stringify({ participantId: 'QA_' + condition, condition, demo: true }) })).json()).trial; await checkout.goto(`${base}/checkout?code=${t.code}`); await scanner.goto(`${base}/scanner?code=${t.code}`); await until(async () => { const t = await current(); return t.connected.checkout && t.connected.scanner; }, 'pair'); await checkout.getByRole('button', { name: 'Enable checkout sound', exact: true }).click(); await scanner.locator('summary').click(); await scanner.getByRole('button', { name: 'Enable & test scanner sound', exact: true }).click(); await until(async () => (await current()).connected.ready, 'sound readiness'); await checkout.getByRole('button', { name: 'Start shopping', exact: false }).click(); await until(async () => (await current()).phase === 'scanning', 'start'); return t; }
+    async function pair(condition) { const t = (await (await api('/api/trials', { method: 'POST', body: JSON.stringify({ participantId: 'QA_' + condition, condition, demo: true }) })).json()).trial; await checkout.goto(`${base}/checkout?code=${t.code}`); await scanner.goto(`${base}/scanner?code=${t.code}`); await until(async () => { const t = await current(); return t.connected.checkout && t.connected.scanner; }, 'pair'); await checkout.getByRole('button', { name: 'Enable checkout sound', exact: true }).click(); await scanner.locator('summary').click(); await scanner.getByRole('button', { name: 'Enable & test scanner sound', exact: true }).click(); await until(async () => (await current()).connected.ready, 'sound readiness'); await checkout.locator('.start-mode.assigned-mode').click(); await until(async () => (await current()).phase === 'scanning', 'start'); return t; }
     await check('research exports require separate researcher authority', async () => { assert.equal((await fetch(base + '/api/export')).status, 401); for (const url of ['/data/study-token.txt', '/data/trials.json', '/@fs/' + root.replaceAll('\\', '/') + '/data/trials.json']) {
         const r = await fetch(base + url);
         assert.ok(!(await r.text()).includes(token));
@@ -90,7 +90,7 @@ try {
     await S.locator('summary').click();
     await S.getByRole('button', { name: 'Enable & test scanner sound', exact: true }).click();
     await until(async () => (await current()).connected.ready, 'B ready');
-    await C.getByRole('button', { name: 'Start shopping', exact: false }).click();
+    await C.locator('.start-mode.assigned-mode').click();
     await until(async () => (await current()).phase === 'scanning', 'B start');
     async function bScan(id) { await S.evaluate(barcode => window.__sockets.at(-1).send(JSON.stringify({ type: 'scan', barcode, scanId: crypto.randomUUID(), inputMethod: 'manual' })), products.find(p => p.id === id).barcode); }
     await S.evaluate(()=>{window.__feedbackSounds=[];const original=HTMLMediaElement.prototype.play;HTMLMediaElement.prototype.play=function(){if(!this.muted)window.__feedbackSounds.push(this.currentSrc||this.src);return original.call(this);};});

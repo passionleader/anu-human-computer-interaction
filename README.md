@@ -29,7 +29,7 @@ Open `/checkout` on the laptop and `/scanner` on the phone using the same Render
 1. Open `/checkout` and select **Connect phone scanner** (or **Connect phone** in the upper-right corner).
 2. Scan the large QR with the phone camera. It opens this checkout's `/scanner?code=…` link and pairs automatically, without typing.
 3. Alternatively, select **Connect with code** beside the QR, open `/scanner` on the phone and enter the four letters. Lowercase is accepted.
-4. Enable checkout sound and phone camera/sound, then select **Start shopping** on the checkout.
+4. Enable checkout sound and phone camera/sound, then select **Start shopping (normal)** or **Start shopping (vegan)** on the checkout.
 
 QR images are generated locally for the current session and origin, without a researcher token. Share them only with the intended scanner. The committed `scanner-entry-qr.png`/`.svg` remain generic public scanner shortcuts; the live UI uses a session-specific QR.
 
@@ -162,3 +162,11 @@ Regenerating assets requires Pillow, NumPy, ReportLab, PyMuPDF, and imageio-ffmp
 ## Desktop product labels and removal
 
 Plant-Based Mince, Firm Tofu and Pea Protein display a green **Vegan** label beneath their names on the checkout stage and in the basket, in both A/B conditions. This metadata is separate from feedback type: tofu remains a neutral-feedback item. During shopping, each basket item has a prominent **Delete** button that removes one unit and updates the total.
+
+## Checkout modes and scan order
+
+- **Normal** is condition A: ordinary checkout beep and guidance, without animal videos, animal sounds or thank-you feedback.
+- **Vegan** is condition B: the existing product-specific animal/thank-you feedback. Both modes offer the same products and Vegan labels; this mode does not restrict purchases to vegan products.
+- Demonstration sessions can choose either mode when starting. Once shopping starts the mode is fixed. For actual research sessions (`demo=false`), only the researcher-assigned mode is enabled, and the server rejects changes to that assignment.
+- Basket rows follow the most recent accepted scan: a newly scanned product is appended at the bottom; scanning an existing product increases its grouped quantity and moves its row to the bottom. The basket scrolls down on each accepted scan, stays at the bottom through feedback/layout updates, and retains manual review position during unrelated updates. Reload/reconnect restores the saved order. Legacy records recover order from scan events when available.
+- No spending limit is enforced. A common fictional budget such as AUD50 can be stated in the study instructions, identically for both modes; interview participants about whether changes came from the budget, preferences or feedback.

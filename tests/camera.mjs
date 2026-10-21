@@ -50,7 +50,7 @@ try {
     await s.getByRole('button', { name: 'Enable & test scanner sound', exact: true }).click();
     await until(async () => (await state()).connected.ready, 'sounds');
     await s.getByText('Scanning has not started', { exact: true }).waitFor();
-    await c.getByRole('button', { name: 'Start shopping', exact: false }).click();
+    await c.locator('.start-mode.assigned-mode').click();
     await until(async () => (await state()).phase === 'scanning', 'scanning');
     await until(async () => (await s.getByText('Scanning has not started', { exact: true }).count()) === 0, 'waiting message cleared');
     await s.getByRole('button', { name: 'Enable camera & sound', exact: true }).click();

@@ -35,7 +35,7 @@ try{
  await c.getByRole('button',{name:'Enable checkout sound',exact:true}).click();await s.locator('summary').click();await s.getByRole('button',{name:'Enable & test scanner sound',exact:true}).click();
  await until(async()=>(await trials()).at(-1).connected.ready,'ready');await s.getByRole('button',{name:'Enable camera & sound',exact:true}).click();
  await until(async()=>s.evaluate(()=>window.__cameraTracks?.some(t=>t.readyState==='live')&&document.querySelector('#camera')?.videoWidth>0),'live camera');
- await c.getByRole('button',{name:'Start shopping',exact:false}).click();
+ await c.locator('.start-mode.assigned-mode').click();
  await s.locator('#barcode-image').setInputFiles('public/assets/barcodes/tofu.png');await c.getByRole('button',{name:'Pay $5.00',exact:false}).waitFor();
  await c.getByRole('button',{name:'Pay $5.00',exact:false}).click();await c.getByRole('button',{name:'Skip',exact:true}).click();
  await s.getByRole('button',{name:'Pay $5.00 · demo',exact:true}).waitFor();await s.screenshot({path:path.join(run,'phone-payment.png'),fullPage:true});

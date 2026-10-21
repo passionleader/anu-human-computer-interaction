@@ -35,7 +35,7 @@ try {
     await c.getByRole('button', { name: 'Enable checkout sound', exact: true }).click();
     await s.locator('summary').click();
     await s.getByRole('button', { name: 'Enable & test scanner sound', exact: true }).click();
-    await c.getByRole('button', { name: 'Start shopping', exact: false }).click();
+    await c.locator('.start-mode.assigned-mode').click();
     await s.locator('summary').click();
     await s.locator('#barcode-image').setInputFiles('public/assets/cards/tofu.png');
     await c.getByRole('button', { name: 'Pay $5.00' }).waitFor();

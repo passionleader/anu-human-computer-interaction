@@ -7,7 +7,7 @@ import { resolve } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { networkInterfaces } from 'node:os';
 import QRCode from 'qrcode';
-import { products, createTrial, generatePairingCode, command, finishFeedback, approve, log, total, type Trial, type Role } from './core';
+import { products, createTrial, generatePairingCode, command, finishFeedback, approve, log, total, restoreCartOrder, type Trial, type Role } from './core';
 const root = process.cwd(), dataDir = resolve(process.env.DATA_DIR || 'data');
 mkdirSync(dataDir, { recursive: true });
 const stateFile = resolve(dataDir, 'trials.json'), tokenFile = resolve(dataDir, 'study-token.txt');
@@ -16,6 +16,7 @@ if (!existsSync(tokenFile))
     writeFileSync(tokenFile, token, { mode: 0o600 });
 let trials: Trial[] = existsSync(stateFile) ? JSON.parse(readFileSync(stateFile, 'utf8')) : [];
 for (const t of trials) {
+    restoreCartOrder(t);
     if (t.feedback)
         finishFeedback(t, 'failed', { reason: 'server_restart' });
     if (t.phase === 'processing')
