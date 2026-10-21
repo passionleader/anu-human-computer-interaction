@@ -17,12 +17,44 @@ let checkoutBeep:CheckoutBeep|null=null;
 let basketNeedsBottom=false;
 function basketProducts():Product[]{return (state.cartOrder||Object.keys(state.cart)).map((id:string)=>catalogue.find(p=>p.id===id)).filter((p:Product|undefined):p is Product=>!!p&&state.cart[p.id]>0);}
 let receiptReturnTimer:ReturnType<typeof setTimeout>|undefined,receiptReturnId='';
-function returnToStart(){
+type ResultsDownload={id:string;status:'pending'|'requested'|'failed';promise:Promise<boolean>};
+let resultsDownload:ResultsDownload|null=null;
+function ensureResultsDownload(retry=false):Promise<boolean>{
+    if(role!=='checkout'||state?.phase!=='receipt')return Promise.resolve(true);
+    const id=String(state.receiptId),key='resultsDownloaded:'+id;
+    if(sessionStorage.getItem(key)==='requested')return Promise.resolve(true);
+    if(resultsDownload?.id===id&&!(retry&&resultsDownload.status==='failed'))return resultsDownload.promise;
+    const download:ResultsDownload={id,status:'pending',promise:Promise.resolve(false)};resultsDownload=download;
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),8000);
+    download.promise=(async()=>{
+        try{
+            const response=await fetch(`/api/results/${encodeURIComponent(id)}?code=${encodeURIComponent(code)}`,{signal:controller.signal,cache:'no-store'});
+            if(!response.ok)throw Error('Results unavailable');
+            const data=await response.json();if(data.trial?.receiptId!==id)throw Error('Wrong result record');
+            const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);
+            const link=document.createElement('a');link.href=url;
+            link.download=response.headers.get('Content-Disposition')?.match(/filename="([^"]+)"/)?.[1]||`field-results-${id}.json`;
+            document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
+            sessionStorage.setItem(key,'requested');download.status='requested';return true;
+        }catch{download.status='failed';return false;}
+        finally{clearTimeout(timeout);if(role==='checkout'&&state?.receiptId===id)renderCheckout();}
+    })();
+    return download.promise;
+}
+async function returnToStart(){
+    const returningTrial=state?.trialId;
+    if(role==='checkout'&&state?.phase==='receipt'){
+        const downloaded=await ensureResultsDownload();
+        if(state?.trialId!==returningTrial)return;
+        if(!downloaded){notice='Experiment data could not download. Please retry before returning.';render();return;}
+    }
     clearTimeout(receiptReturnTimer);receiptReturnTimer=undefined;receiptReturnId='';
-    sessionStorage.removeItem('checkoutReceiptReturn');sessionStorage.removeItem('checkoutCode');
+    if(role==='checkout')sessionStorage.removeItem('checkoutReceiptReturn');
+    sessionStorage.removeItem(role+'Code');
     clearTimeout(reconnectTimer);const previousSocket=ws;ws=null;
     if(previousSocket){previousSocket.onopen=null;previousSocket.onmessage=null;previousSocket.onclose=null;previousSocket.close();}
     stopMedia();guideAudio?.pause();speechSynthesis.cancel();
+    if(role==='scanner'){++cameraRequest;cameraStarting=false;releaseCamera();audioEnabled=false;lastSeen='';lastDetected=0;scanLock=false;}
     document.querySelectorAll<HTMLDialogElement>('dialog[open]').forEach(dialog=>dialog.close());
     state=null;code='';online=false;readySent=false;lastPhase='';participantNotice=notice='';pending.clear();processed.clear();
     const url=new URL(location.href);url.searchParams.delete('code');history.replaceState(null,'',url);render();
@@ -82,6 +114,7 @@ function connect() { clearTimeout(reconnectTimer); if ((role==='study'&&!studyTo
     if (state.phase !== 'feedback')
         stopMedia();
     render();
+    if(role==='checkout'&&state.phase==='receipt')void ensureResultsDownload();
     if (audioEnabled && online && !state.connected.ready && !readySent) {
         send({ type: 'sound_ready' });
         readySent = true;
@@ -234,6 +267,7 @@ function renderCheckout() {
     const basketScroll=previousBasket?.scrollTop||0;
     const wasAtBottom=!!previousBasket&&previousBasket.scrollHeight-previousBasket.clientHeight-basketScroll<=2;
     const p = catalogue.find(p => p.id === state.lastProduct), blocked = !online || !state.connected.scanner;
+    const resultsStatus=sessionStorage.getItem('resultsDownloaded:'+state.receiptId)==='requested'?'requested':resultsDownload&&resultsDownload.id===state.receiptId?resultsDownload.status:'pending';
     let panel = '';
     if (state.phase === 'ready')
         panel = `<div class="intro"><p class="eyebrow">A LITTLE SPACE TO CHOOSE</p><h1>Welcome.<br>Let’s check out.</h1><p>${state.connected.scanner ? "Your phone is connected. Enable sound, then start shopping." : "Scan the QR code with your phone’s camera to connect."}</p><div class="scanner-connect"><img id="pairing-qr" src="${scannerQR()}" width="220" height="220" alt="Scan to connect this checkout to your phone"><div><b>Scan to connect</b><p>No code entry needed.</p><button data-code-pairing>Connect with code</button></div></div><div class="start-modes">${(['A','B'] as const).map(condition=>`<button data-action="start" data-condition="${condition}" class="start-mode ${condition===state.condition?'assigned-mode ':''}${condition==='B'?'primary':''}" ${blocked||!state.connected.ready||(!state.demo&&condition!==state.condition)?'disabled':''} title="${condition==='A'?'Standard checkout without animal or thank-you feedback':'Checkout with animal videos, animal sounds and thank-you feedback'}">Start shopping (${condition==='A'?'normal':'vegan'})</button>`).join('')}</div></div>`;
@@ -244,7 +278,7 @@ function renderCheckout() {
     else if (['payment', 'processing'].includes(state.phase))
         panel = `<div class="intro"><p class="eyebrow">02 / DEMO PAYMENT</p><h1>${state.phase === 'processing' ? 'Processing…' : 'Ready when you are.'}</h1><p>Tap your card, or pay directly on your smartphone.<br>Demo only: tap the terminal below or the Pay button on your phone.</p><button data-action="tap" class="terminal" ${state.phase === 'processing' || blocked ? 'disabled' : ''}><span>◉</span><b>${money(state.totalCents)}</b><small>${state.phase === 'processing' ? 'Processing…' : 'Tap to pay · simulation'}</small></button>${state.phase === 'payment' ? '<button data-action="back" class="text-button">← Back to shopping</button>' : ''}</div>`;
     else if (state.phase === 'receipt')
-        panel = `<div class="intro receipt"><p class="eyebrow">03 / ALL DONE</p><div class="checkmark">✓</div><h1>Thank you.</h1><p>Your receipt has been sent to your smartphone.<br>View your purchases on the connected scanner.</p><p class="receipt-id">${esc(state.receiptId)}</p><div class="receipt-line total"><span>Total</span><b>${money(state.totalCents)}</b></div><p class="muted">Demo payment — no charge made.<br>Returning to the start screen automatically after 10 seconds.</p><button id="return-start" class="primary">Return to start</button></div>`;
+        panel = `<div class="intro receipt"><p class="eyebrow">03 / ALL DONE</p><div class="checkmark">✓</div><h1>Thank you.</h1><p>Your receipt has been sent to your smartphone.<br>View your purchases on the connected scanner.</p><p class="receipt-id">${esc(state.receiptId)}</p><div class="receipt-line total"><span>Total</span><b>${money(state.totalCents)}</b></div><p class="muted">Demo payment — no charge made.<br>${resultsStatus==='failed'?'Automatic return is paused until the data download succeeds.':'Returning to the start screen automatically after 10 seconds.'}</p><p class="results-status" role="status">${resultsStatus==='requested'?'Experiment data download started.':resultsStatus==='failed'?'Data download failed. Retry to continue; your results are still stored.':'Downloading experiment data automatically…'}</p>${resultsStatus==='failed'?'<button id="retry-results">Retry data download</button>':''}<button id="return-start" class="primary">Return to start</button></div>`;
     else
         panel = '<div class="intro"><h1>This session has ended.</h1><p>Thank you for taking part.</p></div>';
     const rows = basketProducts().map(p => `<li data-product="${p.id}"><img src="${p.imagePath}" alt=""><div><b>${p.name}</b>${veganBadge(p)}<small>${state.cart[p.id]} × ${money(p.priceCents)} · ${p.packSize}</small></div><strong>${money(p.priceCents * state.cart[p.id])}</strong>${state.phase === 'scanning' ? `<button class="remove" data-remove="${p.id}" aria-label="Delete one ${esc(p.name)}" title="Delete one item" ${blocked ? 'disabled' : ''}><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg>Delete</button>` : ''}</li>`).join('');
@@ -257,6 +291,7 @@ function renderCheckout() {
     document.querySelector('#test-sound')?.addEventListener('click', () => {if(state.phase!=='feedback')void testSound('beep');});
     document.querySelector('#pair-scanner')?.addEventListener('click',()=>void generateCode());
     document.querySelector('#return-start')?.addEventListener('click',returnToStart);
+    document.querySelector('#retry-results')?.addEventListener('click',()=>{const id=state.receiptId;void ensureResultsDownload(true).then(ok=>{if(ok&&state?.receiptId===id)void returnToStart();});});
     document.querySelector('#help')?.addEventListener('click', () => { participantNotice='Please ask the researcher for help. You may skip feedback or stop at any time.';send({type:'help'}); notice = participantNotice; render(); });
     document.querySelectorAll<HTMLButtonElement>('[data-action]').forEach(b => b.onclick = () => { const action = b.dataset.action!; if (action === 'clear' && !confirm('Return all selected cards to the tray and start again?'))
         return; send({ type: action === 'membership-demo' ? 'membership' : action, demo: action === 'membership-demo', ...(action==='start'?{condition:b.dataset.condition}:{}) }); if (action === 'remove' || action === 'clear')
@@ -328,8 +363,9 @@ else if (role === 'scanner')
 function renderPhonePayment(){
     const receipt=state.phase==='receipt';
     const rows=basketProducts().map(p=>`<li><img src="${p.imagePath}" alt=""><div><b>${esc(p.name)}</b><small>${state.cart[p.id]} × ${money(p.priceCents)} · ${esc(p.packSize)}</small></div><strong>${money(p.priceCents*state.cart[p.id])}</strong></li>`).join('');
-    shell(`<main class="scanner phone-purchases"><p class="eyebrow">${receipt?'DIGITAL RECEIPT':'DEMO PAYMENT'}</p>${receipt?'<div class="checkmark">✓</div>':''}<h1>${receipt?'Payment complete.':state.phase==='processing'?'Processing…':'Pay on your phone.'}</h1><p>${receipt?'Your receipt is here. Review your purchases below.':'Tap Pay below, or use the terminal on the checkout screen.'}</p>${receipt?`<p class="receipt-id">${esc(state.receiptId)}</p>`:''}<ul class="phone-receipt-items" aria-label="Purchased items">${rows}</ul><div class="receipt-line total"><span>Total AUD</span><b>${money(state.totalCents)}</b></div><p>Demo payment — no charge made.</p>${receipt?`<a class="button" href="/api/receipt/${encodeURIComponent(state.receiptId)}?code=${encodeURIComponent(code)}">Save receipt</a>`:`<button id="phone-pay" class="primary pay" ${state.phase!=='payment'||!online||!state.connected.checkout?'disabled':''}>${state.phase==='processing'?'Processing…':'Pay '+money(state.totalCents)+' · demo'}</button>`}<p class="alert" role="status">${esc(!online?'Connection lost. Reconnecting…':notice)}</p></main>`);
+    shell(`<main class="scanner phone-purchases"><p class="eyebrow">${receipt?'DIGITAL RECEIPT':'DEMO PAYMENT'}</p>${receipt?'<div class="checkmark">✓</div>':''}<h1>${receipt?'Payment complete.':state.phase==='processing'?'Processing…':'Pay on your phone.'}</h1><p>${receipt?'Your receipt is here. Review your purchases below.':'Tap Pay below, or use the terminal on the checkout screen.'}</p>${receipt?`<p class="receipt-id">${esc(state.receiptId)}</p>`:''}<ul class="phone-receipt-items" aria-label="Purchased items">${rows}</ul><div class="receipt-line total"><span>Total AUD</span><b>${money(state.totalCents)}</b></div><p>Demo payment — no charge made.</p>${receipt?`<a class="button" href="/api/receipt/${encodeURIComponent(state.receiptId)}?code=${encodeURIComponent(code)}">Save receipt</a><button id="scanner-return-start" class="primary">Return to start</button><p class="muted">Disconnect this scanner to connect the next checkout. Save your receipt first if needed.</p>`:`<button id="phone-pay" class="primary pay" ${state.phase!=='payment'||!online||!state.connected.checkout?'disabled':''}>${state.phase==='processing'?'Processing…':'Pay '+money(state.totalCents)+' · demo'}</button>`}<p class="alert" role="status">${esc(!online?'Connection lost. Reconnecting…':notice)}</p></main>`);
     document.querySelector('#phone-pay')?.addEventListener('click',()=>send({type:'tap'}));
+    document.querySelector('#scanner-return-start')?.addEventListener('click',()=>void returnToStart());
 }
 function renderScanner() { if (!state) {
     pair();

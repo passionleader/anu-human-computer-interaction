@@ -37,7 +37,7 @@ QR images are generated locally for the current session and origin, without a re
 
 At payment, tap the simulated desktop terminal or select **Pay … · demo** on the connected phone. Both trigger the same single simulated approval: no real card details or charges. The scanner camera stops at payment. After approval, the checkout announces that the receipt has been sent to the smartphone. The phone displays quantities, prices, total and receipt ID, plus **Save receipt**. Reloading the same scanner session restores it while the server records and code remain available. A Render restart on temporary storage can erase these receipts. Delivery is through the connected scanner, not email or SMS.
 
-After payment, the desktop returns to its initial connection screen after **10 seconds**, or immediately using **Return to start**. The timer survives receipt-screen updates and a desktop reload. This clears the desktop connection, not the completed trial: the phone retains its digital receipt, and exported records remain intact. Start a new connection to get a fresh shopping session; an actual study should use the next trial link from the researcher console.
+After payment, the desktop returns to its initial connection screen after **10 seconds**, or immediately using **Return to start**. The timer survives receipt-screen updates and a desktop reload. This clears the desktop connection, not the completed trial: the phone retains its digital receipt until **Return to start** is selected on the phone. The phone button closes its socket/camera, clears its saved pairing code and opens a blank connection form for the next test. Server records remain intact. Start a new connection to get a fresh shopping session; an actual study should use the next trial link from the researcher console.
 
 Lamb feedback audio is extracted from the latest user-supplied `lamb_gemini.mp4` (seconds 1–3.8), with normalization and fades.
 
@@ -170,3 +170,20 @@ Plant-Based Mince, Firm Tofu and Pea Protein display a green **Vegan** label ben
 - Demonstration sessions can choose either mode when starting. Once shopping starts the mode is fixed. For actual research sessions (`demo=false`), only the researcher-assigned mode is enabled, and the server rejects changes to that assignment.
 - Basket rows follow the most recent accepted scan: a newly scanned product is appended at the bottom; scanning an existing product increases its grouped quantity and moves its row to the bottom. The basket scrolls down on each accepted scan, stays at the bottom through feedback/layout updates, and retains manual review position during unrelated updates. Reload/reconnect restores the saved order. Legacy records recover order from scan events when available.
 - No spending limit is enforced. A common fictional budget such as AUD50 can be stated in the study instructions, identically for both modes; interview participants about whether changes came from the budget, preferences or feedback.
+
+## Automatic experiment data download
+
+When payment completes, the desktop automatically requests **one JSON file per trial** before its ten-second return (or manual Return to start). No download-button click is needed. The filename is `field-results-<anonymous participant ID>-<A/B>-<receipt ID>.json`; look in the browser's normal download location. The scanner does not automatically download research data. Repeated receipt updates/reloads in the same checkout tab do not duplicate a successful download request.
+
+The file includes:
+
+- Trial/anonymous participant/receipt IDs, Normal or Vegan condition and the demonstration-data flag.
+- `shoppingSeconds`: Start shopping to the final Pay before membership/payment. Back to shopping uses the last Pay, not the first.
+- `totalCompletionSeconds`: Start shopping to payment approval. Setup, Render wake-up and receipt return delay are excluded. These are task durations, not psychological hesitation measurements.
+- Observed feedback duration and completed/skipped/failed counts, without assuming every clip took exactly three seconds.
+- Final product names, quantities, unit prices, total, vegan/animal-derived/unclassified unit counts, product additions/deletions and full raw event history. **Money is in integer AUD cents** (500 = $5.00); timestamps are ISO UTC.
+- Delete/cart reset/scan rejection/help/connection loss/device-error counts. Missing timestamps remain null rather than fabricated zero-second results.
+
+Only the completed trial addressed by its existing pairing capability can be downloaded from `/api/results/<receipt ID>?code=…`; the file excludes the pairing code, researcher token and other participants' trials. Keep downloaded research files in private study storage; do not commit them to this public app repository. The existing researcher CSV/JSON exports remain available.
+
+If fetching the result fails, automatic/manual desktop return pauses and **Retry data download** is shown. A successful retry resumes returning to start. If the browser asks to allow automatic/multiple file downloads, allow them for this app and confirm that each test produced a file. Browser download settings can still block or prompt for saving; the web app can request a download but cannot prove that a user saved it. The server record remains available through the researcher console while its temporary storage survives.

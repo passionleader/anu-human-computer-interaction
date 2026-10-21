@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import { randomBytes } from 'node:crypto';
 import { networkInterfaces } from 'node:os';
 import QRCode from 'qrcode';
+import {studyResults} from './study-results';
 import { products, createTrial, generatePairingCode, command, finishFeedback, approve, log, total, restoreCartOrder, type Trial, type Role } from './core';
 const root = process.cwd(), dataDir = resolve(process.env.DATA_DIR || 'data');
 mkdirSync(dataDir, { recursive: true });
@@ -80,6 +81,12 @@ app.get('/api/qr', async (q, r) => { try {
 catch {
     r.status(400).send('Invalid URL');
 } });
+app.get('/api/results/:id',(q,r)=>{
+    const t=trials.find(t=>t.code===q.query.code&&t.receiptId===q.params.id);
+    if(!t)return r.sendStatus(404);
+    r.setHeader('Cache-Control','no-store');
+    r.attachment(`field-results-${t.participantId}-${t.condition}-${t.receiptId}.json`).json(studyResults(t));
+});
 app.get('/api/receipt/:id', (q, r) => { const t = trials.find(t => t.code === q.query.code && t.receiptId === q.params.id); if (!t)
     return r.sendStatus(404); r.attachment(t.receiptId + '.txt').type('text/plain').send(['FIELD / DIGITAL RECEIPT', t.receiptId, t.created, ...products.filter(p => t.cart[p.id]).map(p => `${p.name} | ${t.cart[p.id]} x $${(p.priceCents / 100).toFixed(2)} = $${(p.priceCents * t.cart[p.id] / 100).toFixed(2)}`), `TOTAL AUD $${(total(t) / 100).toFixed(2)}`, 'Demo payment - no charge made'].join('\n')); });
 app.use('/assets', express.static(resolve(root, 'public/assets')));
