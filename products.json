@@ -37,6 +37,7 @@
   },
   {
     "id": "vegan-mince",
+    "isVegan": true,
     "barcode": "2000000000046",
     "name": "Plant-Based Mince",
     "packSize": "500 g",
@@ -49,6 +50,7 @@
   },
   {
     "id": "tofu",
+    "isVegan": true,
     "barcode": "2000000000053",
     "name": "Firm Tofu",
     "packSize": "500 g",
@@ -61,6 +63,7 @@
   },
   {
     "id": "pea-protein",
+    "isVegan": true,
     "barcode": "2000000000060",
     "name": "Pea Protein",
     "packSize": "500 g",

@@ -158,3 +158,7 @@ node --import tsx server.ts
 Normal `Start.ps1` execution serves the production build. Run `npm run build` again after changing source files.
 
 Regenerating assets requires Pillow, NumPy, ReportLab, PyMuPDF, and imageio-ffmpeg. Run `scripts/voices.ps1` to create source TTS audio, then `python scripts/assets.py` to build cards and media. Use `python scripts/cards.py` to rebuild barcode labels, card PNGs and the PDF from existing product photos without regenerating media. Asset regeneration also requires the original source files in the local `asset-sources/` folder, which is excluded from the public repository. Finished images, cards, and media are already included, so regeneration is not needed to run or deploy the app.
+
+## Desktop product labels and removal
+
+Plant-Based Mince, Firm Tofu and Pea Protein display a green **Vegan** label beneath their names on the checkout stage and in the basket, in both A/B conditions. This metadata is separate from feedback type: tofu remains a neutral-feedback item. During shopping, each basket item has a prominent **Delete** button that removes one unit and updates the total.
