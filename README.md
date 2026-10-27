@@ -2,28 +2,11 @@
 
 A working prototype for ANU COMP6390 Human–Computer Interaction. A laptop checkout, smartphone barcode scanner, and researcher console communicate through a shared Node.js server and WebSocket connection. Participant screens and prerecorded instructions are in English. Payments, membership cards, and terminal taps are simulated; the app does not process real payments, NFC, membership details, or email.
 
-## Deploy on Render
+## Deployed on Render
 
-[Deployed to Render - Checkout](https://anu-human-computer-interaction.onrender.com/)
-[Deployed to Render - Scanner](https://anu-human-computer-interaction.onrender.com/scanner)
+[Checkout-PC](https://anu-human-computer-interaction.onrender.com/)
 
-Use the button above or create a Render Web Service from this public repository. The default `render.yaml` describes a free demonstration service.
-
-| Setting | Value |
-| --- | --- |
-| Runtime | Node.js 22 |
-| Root directory | Leave blank |
-| Build command | `npm ci --include=dev && npm run build` |
-| Start command | `npm start` |
-| Health check | `/healthz` |
-
-The Blueprint generates a private `STUDY_TOKEN` environment variable. Read it in the Render service's Environment settings to unlock `/study`. If creating the service manually, set a long, random `STUDY_TOKEN` yourself; see [deployment instructions](DEPLOY_RENDER.md) for the other environment settings. That supporting guide is currently in Korean.
-
-Open `/checkout` on the laptop and `/scanner` on the phone using the same Render HTTPS address. No local IP address or local certificate is needed for this route. `RENDER_EXTERNAL_URL` supplies the public pairing address automatically. Set `PUBLIC_BASE_URL` only when using a custom domain.
-
-**Free hosting uses temporary storage. Research records can disappear after a restart or redeployment.** Export CSV/JSON records from `/study` and keep a separate copy. The optional `render.research.yaml` uses a **paid** service and persistent disk; review the cost before choosing it. Keep a single server instance because records are stored in a JSON file.
-
-**Updates:** Services created using a Public Git Repository URL require **Manual Deploy → Deploy latest commit** after a GitHub push. Services connected through a Git provider follow their Auto-Deploy setting. Wait for the new deployment to become Live before reloading both devices and enabling sound again. [Render deployment documentation](https://render.com/docs/deploys).
+[Scanner-Mobile](https://anu-human-computer-interaction.onrender.com/scanner)
 
 ## Connect the phone scanner
 
