@@ -4,7 +4,8 @@ A working prototype for ANU COMP6390 Human–Computer Interaction. A laptop chec
 
 ## Deploy on Render
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/passionleader/anu-human-computer-interaction)
+[Deployed to Render - Checkout](https://anu-human-computer-interaction.onrender.com/)
+[Deployed to Render - Scanner](https://anu-human-computer-interaction.onrender.com/scanner)
 
 Use the button above or create a Render Web Service from this public repository. The default `render.yaml` describes a free demonstration service.
 
